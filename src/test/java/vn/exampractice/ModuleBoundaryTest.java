@@ -22,7 +22,7 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
  * Kiểm tra ranh giới giữa các module của modular monolith.
  *
  * <p>Module là package con trực tiếp của {@code vn.exampractice}. Mỗi module chỉ lộ ra
- * phần public ở gốc package (Api, dto, event); mọi thứ trong {@code internal} là riêng tư.
+ * phần public ở gốc package (Api, dto); mọi thứ trong {@code internal} là riêng tư.
  *
  * <p>Hướng phụ thuộc cho phép: identity ◀ examdesign ◀ examination ◀ proctoring.
  */

@@ -1,6 +1,6 @@
 # Bảng mã lỗi
 
-Danh sách các giá trị `code` trong response lỗi `ProblemDetail`. Định dạng và cách dùng xem [README, mục 5.6](../README.md#56-response-lỗi-problemdetail-rfc-9457).
+Danh sách các giá trị `code` trong response lỗi `ProblemDetail`. Định dạng và cách dùng xem [README, mục 6.6](../README.md#66-response-lỗi-problemdetail-rfc-9457).
 
 Khi thêm một mã lỗi mới, **bổ sung vào file này** trong cùng commit.
 
@@ -14,6 +14,7 @@ Khi thêm một mã lỗi mới, **bổ sung vào file này** trong cùng commit
 | `FORBIDDEN` | 403 | Không đủ quyền |
 | `NOT_FOUND` | 404 | Không tìm thấy tài nguyên hoặc endpoint |
 | `METHOD_NOT_ALLOWED` | 405 | Sai HTTP method |
+| `CONCURRENT_MODIFICATION` | 409 | Dữ liệu vừa bị thao tác khác cập nhật (optimistic locking), cần tải lại rồi thử lại |
 | `INTERNAL_ERROR` | 500 | Lỗi không lường trước (chi tiết chỉ ghi trong log server) |
 
 ## Mã nghiệp vụ
