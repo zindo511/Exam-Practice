@@ -75,6 +75,7 @@ Ranh giới giữa các module được kiểm tra tự động bởi `ModuleBou
 | Giám sát liên tục làm nặng phần làm bài | `proctoring` giữ **bảng đọc riêng**, cập nhật từ event, không truy vấn bảng bài làm |
 | Schema database lệch giữa các môi trường | **Flyway** quản lý migration; Hibernate chỉ kiểm tra (`validate`) |
 | Mỗi API trả lỗi một kiểu, frontend khó xử lý | Mọi lỗi theo chuẩn **ProblemDetail** (RFC 9457) kèm `code` cố định |
+| Lombok và MapStruct sinh code ẩn lúc biên dịch: khó lần theo luồng dữ liệu, `@Data`/`@Setter` tạo setter public phá vỡ luật của entity | **Không dùng Lombok và MapStruct.** DTO dùng `record`; entity tự viết constructor và chỉ các getter cần thiết, **không có setter**; chuyển entity sang DTO bằng hàm viết tay (`QuestionDto.from(question)`) |
 
 ## 3. Core Features (Tính năng cốt lõi)
 
@@ -336,11 +337,14 @@ Content-Type: application/problem+json
 ### 5.8. Quy tắc cho backend
 
 1. Controller trả về **DTO (record)**, không bao giờ trả entity.
-2. Lỗi nghiệp vụ: **ném exception** kế thừa `BusinessException` (trong `shared`) với `code`, status và `detail`. Không `try/catch` trong controller để tự tạo response lỗi.
+2. Lỗi nghiệp vụ: **ném `BusinessException`** (trong `shared`) với một hằng `ErrorCode`. Mỗi module có enum mã lỗi riêng; mỗi hằng mang sẵn `code`, status và thông điệp mặc định, nên không bao giờ truyền status khi ném lỗi. Không `try/catch` trong controller để tự tạo response lỗi.
 3. Mọi exception được chuyển thành `ProblemDetail` tại **một chỗ duy nhất**: `GlobalExceptionHandler`.
 4. Lỗi `401`/`403` do Spring Security trả về **trước khi** request đến controller, nên không đi qua `GlobalExceptionHandler`. Chúng được xử lý bởi `AuthenticationEntryPoint` và `AccessDeniedHandler` để trả cùng định dạng `ProblemDetail`.
 5. `detail` **không bao giờ** chứa stack trace, câu SQL, tên class hay thông tin nội bộ.
 6. Validate đầu vào bằng Bean Validation (`@Valid`, `@NotBlank`, `@Size`…) trên DTO request, với thông điệp tiếng Việt.
+7. **Không dùng Lombok, MapStruct.** DTO là `record`, chuyển đổi viết tay từng field:
+   - DTO dùng trong module (request/response của REST API): hàm static `from(...)` đặt trong chính DTO.
+   - DTO của Api công khai (`<module>/dto/`): chuyển đổi trong `internal` (ví dụ trong `ExaminationApiImpl`), vì phần công khai không được phụ thuộc vào entity.
 
 ### 5.9. Checklist khi thêm endpoint mới
 
