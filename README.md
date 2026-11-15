@@ -72,6 +72,7 @@ Ranh giới giữa các module được kiểm tra tự động bởi `ModuleBou
 | Vấn đề | Giải pháp |
 |---|---|
 | Code các phần dính chặt vào nhau, sửa một chỗ hỏng chỗ khác | **Modular monolith**: 4 module giao tiếp qua Api và event; ranh giới kiểm tra tự động bằng ArchUnit |
+| Quan hệ JPA (`@ManyToOne`, `@OneToMany`) chạy query ngầm khi truy cập, dễ sinh lỗi **N+1 query** và buộc chặt các entity với nhau | **Flat ID Linking**: giữa các module và giữa các thực thể chính chỉ lưu ID; service gom ID rồi lấy dữ liệu liên quan **bằng một query** (`IN (...)`) và ghép trong bộ nhớ. Quan hệ JPA chỉ dùng cho thực thể con bên trong một thực thể chính (`Attempt` → `Answer`) |
 | Giám sát liên tục làm nặng phần làm bài | `proctoring` giữ **bảng đọc riêng**, cập nhật từ event, không truy vấn bảng bài làm |
 | Schema database lệch giữa các môi trường | **Flyway** quản lý migration; Hibernate chỉ kiểm tra (`validate`) |
 | Mỗi API trả lỗi một kiểu, frontend khó xử lý | Mọi lỗi theo chuẩn **ProblemDetail** (RFC 9457) kèm `code` cố định |
