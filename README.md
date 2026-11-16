@@ -532,7 +532,7 @@ Content-Type: application/problem+json
 
 1. Tạo nhánh mới từ nhánh chính `main`, mỗi nhánh một việc. Không commit thẳng lên `main`; mọi thay đổi vào `main` qua pull request.
 2. Viết code và test; cập nhật tài liệu liên quan trong cùng nhánh ([mục 7.5](#75-thêm-tính-năng-vào-một-module)).
-3. Chạy `./mvnw test`; **mọi test phải xanh**, kể cả các test kiến trúc.
+3. Chạy `./mvnw test`; **mọi test phải xanh**, kể cả các test kiến trúc. GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) chạy lại lệnh này cho mỗi pull request vào `main`; CI đỏ thì chưa merge.
 4. Mở pull request, mô tả thay đổi gì và vì sao; cần ít nhất một người review ([mục 7.7](#77-review)).
 
 **Tên nhánh:** `<loại>/<module>-<mô-tả-ngắn>`, chữ thường, nối bằng `-`.
