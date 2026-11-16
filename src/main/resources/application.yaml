@@ -12,6 +12,12 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/exam_practice}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD}
+  data:
+    web:
+      pageable:
+        # ADR-0009: page bắt đầu từ 0, size mặc định 20; size lớn hơn 100 bị hạ xuống 100.
+        default-page-size: 20
+        max-page-size: 100
   jpa:
     hibernate:
       ddl-auto: validate

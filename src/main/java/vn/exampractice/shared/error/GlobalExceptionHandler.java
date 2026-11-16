@@ -34,10 +34,10 @@ import vn.exampractice.shared.error.ProblemDetailFactory.FieldViolation;
  * Nơi duy nhất chuyển exception thành {@code ProblemDetail} (README 6.8): lỗi nghiệp vụ,
  * validation, request sai định dạng, 404/405/415, optimistic locking và lỗi không lường trước.
  *
- * <p>Lỗi 401/403 do filter của Security trả về không đi qua đây; xem package
- * {@code shared.security}. Hai handler {@link AccessDeniedException} và
- * {@link AuthenticationException} ở đây chỉ bắt trường hợp lỗi bảo mật ném ra từ bên trong
- * controller/service (ví dụ {@code @PreAuthorize}), để chúng không rơi vào lỗi 500.
+ * <p>Hai handler {@link AuthenticationException} và {@link AccessDeniedException} nhận lỗi từ
+ * hai nguồn: từ filter của Security, do các class trong {@code shared.security} chuyển sang;
+ * và từ bên trong controller/service (ví dụ {@code @PreAuthorize}), để chúng không rơi vào
+ * lỗi 500.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -99,7 +99,7 @@ public class GlobalExceptionHandler {
         return ProblemDetailFactory.create(CommonErrorCode.MALFORMED_REQUEST, request.getRequestURI());
     }
 
-    // ---------- 401, 403 ném từ bên trong controller/service ----------
+    // ---------- 401, 403: từ filter của Security hoặc từ bên trong controller/service ----------
 
     @ExceptionHandler(AuthenticationException.class)
     ProblemDetail handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
