@@ -40,6 +40,9 @@ erDiagram
     }
 ```
 
+- `username` lưu dạng đã chuẩn hóa (bỏ khoảng trắng hai đầu, chữ thường), nên `UNIQUE` thường đã chặn được trùng không phân biệt hoa thường, và đăng nhập cũng không phân biệt hoa thường.
+- `password_hash` là `VARCHAR(100)`: BCrypt dài 60 ký tự, phần dư để dành nếu sau này đổi thuật toán băm.
+
 ## 4. `examdesign`
 
 ```mermaid
