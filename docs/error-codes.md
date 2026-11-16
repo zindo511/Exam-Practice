@@ -30,6 +30,10 @@ Status `404` cho "không tìm thấy", `409` cho vi phạm luật hoặc sai tr�
 | `INVALID_ACCESS_CODE` | 409 | Mã kỳ thi sai, hết hiệu lực, hoặc kỳ thi đã khóa tham gia |
 | `ACCESS_CODE_ATTEMPTS_EXCEEDED` | 429 | Nhập sai mã quá 5 lần trong 15 phút; tạm chặn nhập mã 15 phút |
 | `SESSION_NOT_OPEN` | 409 | Kỳ thi chưa mở hoặc đã đóng |
+| `INVALID_SESSION_STATE` | 409 | Thao tác không hợp lệ với trạng thái hiện tại của kỳ thi (ví dụ hủy kỳ thi đã mở) |
+| `EXAM_NOT_AVAILABLE` | 409 | Đề không tồn tại, đã lưu trữ hoặc không có câu nào, khi tạo hoặc mở kỳ thi |
+| `NOT_A_PARTICIPANT` | 409 | Bắt đầu làm bài khi chưa nhập mã tham gia kỳ thi |
+| `ATTEMPT_ALREADY_STARTED` | 409 | Học sinh đã có bài làm trong kỳ thi này |
 | `ATTEMPT_EXPIRED` | 409 | Bài thi đã hết giờ |
 | `ATTEMPT_ALREADY_SUBMITTED` | 409 | Bài thi đã nộp |
 | `ATTEMPT_LOCKED` | 409 | Bài thi bị giáo viên khóa |
