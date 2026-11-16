@@ -1,0 +1,50 @@
+name: CI
+
+# Chạy toàn bộ test (kiến trúc, khởi động, unit, integration) cho mọi pull request vào main
+# và mỗi lần main thay đổi. Test cần Docker cho Testcontainers; runner ubuntu của GitHub có sẵn Docker.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Đẩy commit mới lên cùng nhánh thì hủy lượt chạy cũ đang dở.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ./mvnw test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cài JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # CI không có file .env. Datasource do Testcontainers cung cấp (@ServiceConnection),
+      # còn JWT_SECRET sinh ngẫu nhiên cho mỗi lượt chạy, không dùng secret thật.
+      - name: Sinh JWT_SECRET tạm cho test
+        run: echo "JWT_SECRET=$(openssl rand -base64 48)" >> "$GITHUB_ENV"
+
+      - name: Chạy test
+        run: ./mvnw --batch-mode --no-transfer-progress test
+
+      - name: Lưu báo cáo test khi thất bại
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 7
