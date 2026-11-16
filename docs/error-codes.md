@@ -9,11 +9,12 @@ Khi thêm một mã lỗi mới, **bổ sung vào file này** trong cùng commit
 | `code` | Status | Khi nào |
 |---|---|---|
 | `VALIDATION_FAILED` | 400 | Dữ liệu đầu vào không hợp lệ (kèm `errors`) |
-| `MALFORMED_REQUEST` | 400 | Body không đọc được, sai kiểu tham số |
+| `MALFORMED_REQUEST` | 400 | Body không đọc được, sai kiểu tham số, thiếu tham số bắt buộc |
 | `UNAUTHENTICATED` | 401 | Thiếu token, token sai hoặc hết hạn |
 | `FORBIDDEN` | 403 | Không đủ quyền |
 | `NOT_FOUND` | 404 | Không tìm thấy tài nguyên hoặc endpoint |
 | `METHOD_NOT_ALLOWED` | 405 | Sai HTTP method |
+| `UNSUPPORTED_MEDIA_TYPE` | 415 | `Content-Type` của request không được hỗ trợ (ví dụ gửi `text/plain` cho endpoint nhận JSON) |
 | `CONCURRENT_MODIFICATION` | 409 | Dữ liệu vừa bị thao tác khác cập nhật (optimistic locking), cần tải lại rồi thử lại |
 | `INTERNAL_ERROR` | 500 | Lỗi không lường trước (chi tiết chỉ ghi trong log server) |
 
