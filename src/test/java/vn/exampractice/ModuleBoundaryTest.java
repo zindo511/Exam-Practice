@@ -75,6 +75,17 @@ class ModuleBoundaryTest {
                     .allowEmptyShould(true);
 
     @ArchTest
+    static final ArchRule shared_depends_on_no_module =
+            noClasses().that().resideInAPackage("vn.exampractice.shared..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "vn.exampractice.identity..",
+                            "vn.exampractice.examdesign..",
+                            "vn.exampractice.examination..",
+                            "vn.exampractice.proctoring..")
+                    .because("shared chỉ chứa thứ dùng chung, không được biết module nào tồn tại")
+                    .allowEmptyShould(true);
+
+    @ArchTest
     static final ArchRule entity_tables_use_their_module_prefix =
             classes().that().areAnnotatedWith(Entity.class)
                     .should(haveTableNameWithModulePrefix())

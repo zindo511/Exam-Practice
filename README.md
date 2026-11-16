@@ -21,6 +21,7 @@ Hệ thống thi và luyện thi trực tuyến: **giáo viên** soạn đề, m
   - [4.3. Cấu trúc bên trong một module](#43-cấu-trúc-bên-trong-một-module)
   - [4.4. Luồng chính của một kỳ thi](#44-luồng-chính-của-một-kỳ-thi)
   - [4.5. Ràng buộc kiến trúc](#45-ràng-buộc-kiến-trúc)
+  - [4.6. Trạng thái và dữ liệu](#46-trạng-thái-và-dữ-liệu)
 - [5. Chạy dự án](#5-chạy-dự-án)
 - [6. API Documentation (Tài liệu API & Chuẩn giao tiếp)](#6-api-documentation-tài-liệu-api--chuẩn-giao-tiếp)
   - [6.1. Tra cứu tài liệu tự động](#61-tra-cứu-tài-liệu-tự-động)
@@ -227,7 +228,7 @@ sequenceDiagram
     participant PR as proctoring
 
     GV->>EX: Mở kỳ thi
-    EX->>ED: getPublishedSnapshot(examId)
+    EX->>ED: getExamSnapshot(examId)
     ED-->>EX: Nội dung đề
     HS->>EX: Nhập mã, bắt đầu làm bài
     loop Trong lúc làm bài
@@ -242,7 +243,7 @@ sequenceDiagram
 
 ### 4.5. Ràng buộc kiến trúc
 
-Cột **Đảm bảo bởi** cho biết ràng buộc được kiểm tra ở đâu: **compiler** (lỗi khi build), **ArchUnit** (lỗi khi chạy `./mvnw test`), **runtime** (lỗi khi khởi động), hoặc **review** (dựa vào người review). Cột **ADR** trỏ tới bản ghi giải thích lý do.
+Cột **Đảm bảo bởi** cho biết ràng buộc được kiểm tra ở đâu: **compiler** (lỗi khi build), **ArchUnit** (lỗi khi chạy `./mvnw test`), **runtime** (lỗi khi khởi động), **test** (test JUnit thường), hoặc **review** (dựa vào người review). Các rule ArchUnit nằm trong `ModuleBoundaryTest` (ranh giới module) và `CodingConventionTest` (quy ước viết code). Cột **ADR** trỏ tới bản ghi giải thích lý do.
 
 | # | Ràng buộc | Đảm bảo bởi | ADR |
 |---|---|---|---|
@@ -250,14 +251,23 @@ Cột **Đảm bảo bởi** cho biết ràng buộc được kiểm tra ở đ�
 | 2 | Phụ thuộc một chiều `identity` ◀ `examdesign` ◀ `examination` ◀ `proctoring`, không có vòng | ArchUnit | [0004](docs/adr/0004-public-api-va-chieu-phu-thuoc.md) |
 | 3 | `examination` không biết `proctoring`. `proctoring` lấy trạng thái bài làm và gửi lệnh của giáo viên qua `ExaminationApi` | ArchUnit | [0004](docs/adr/0004-public-api-va-chieu-phu-thuoc.md), [0011](docs/adr/0011-giam-sat-hoi-qua-examination-api.md) |
 | 4 | Mỗi module chỉ đọc và ghi bảng của mình; tên bảng có tiền tố `identity_`, `design_`, `exam_`, `proctor_` | ArchUnit (tiền tố) + review (truy vấn) | [0006](docs/adr/0006-flyway-va-du-lieu-theo-module.md) |
-| 5 | Liên kết giữa module và giữa các thực thể chính chỉ bằng ID; không có foreign key xuyên module | Review (entity và migration) | [0007](docs/adr/0007-flat-id-linking.md) |
-| 6 | Entity không ra khỏi module; Api và controller chỉ trả DTO | Compiler + review | [0004](docs/adr/0004-public-api-va-chieu-phu-thuoc.md) |
+| 5 | Liên kết giữa module và giữa các thực thể chính chỉ bằng ID; không có foreign key xuyên module | ArchUnit (không `@ManyToOne`) + review (migration) | [0007](docs/adr/0007-flat-id-linking.md) |
+| 6 | Entity không ra khỏi module; Api và controller chỉ trả DTO | Compiler + ArchUnit | [0004](docs/adr/0004-public-api-va-chieu-phu-thuoc.md) |
 | 7 | Một transaction chỉ ghi vào một module | Review | [0006](docs/adr/0006-flyway-va-du-lieu-theo-module.md) |
-| 8 | Luật nghiệp vụ nằm trong entity; entity không có setter | Review | [0008](docs/adr/0008-khong-lombok-mapstruct.md) |
+| 8 | Luật nghiệp vụ nằm trong entity; entity không có setter | ArchUnit (không setter) + review (luật nghiệp vụ) | [0008](docs/adr/0008-khong-lombok-mapstruct.md) |
 | 9 | Schema chỉ thay đổi qua migration Flyway | Runtime (Hibernate `validate`) | [0006](docs/adr/0006-flyway-va-du-lieu-theo-module.md) |
-| 10 | `shared` không phụ thuộc module nào và không chứa logic nghiệp vụ | Review | [0004](docs/adr/0004-public-api-va-chieu-phu-thuoc.md) |
-| 11 | Không dùng Lombok, MapStruct | Review (`pom.xml`) | [0008](docs/adr/0008-khong-lombok-mapstruct.md) |
+| 10 | `shared` không phụ thuộc module nào và không chứa logic nghiệp vụ | ArchUnit (phụ thuộc) + review (logic nghiệp vụ) | [0004](docs/adr/0004-public-api-va-chieu-phu-thuoc.md) |
+| 11 | Không dùng Lombok, MapStruct | Test (thư viện không có trên classpath) | [0008](docs/adr/0008-khong-lombok-mapstruct.md) |
 | 12 | Hạn chót luôn tính theo giờ server; mọi thao tác ghi lên bài làm kiểm tra trạng thái và hạn chót trong entity; `Attempt` có `@Version` | Review | [0013](docs/adr/0013-xu-ly-het-gio-lam-bai.md) |
+| 13 | Enum trong entity lưu dạng chuỗi (`@Enumerated(EnumType.STRING)`), không lưu số thứ tự | ArchUnit | — |
+| 14 | Controller không dùng repository trực tiếp; đi qua service | ArchUnit | — |
+
+### 4.6. Trạng thái và dữ liệu
+
+| Tài liệu | Nội dung |
+|---|---|
+| [docs/state-machines.md](docs/state-machines.md) | Vòng đời của kỳ thi, bài làm, câu hỏi và đề: trạng thái, ai được chuyển, điều kiện, tác động |
+| [docs/database.md](docs/database.md) | Bảng của từng module (sơ đồ ER), tham chiếu giữa các module, index |
 
 ## 5. Chạy dự án
 
@@ -461,7 +471,7 @@ Content-Type: application/problem+json
    - DTO của Api công khai (`<module>/dto/`): chuyển đổi trong `internal` (ví dụ trong `ExaminationApiImpl`), vì phần công khai không được phụ thuộc vào entity.
 8. **Liên kết entity bằng ID (Flat ID Linking).** Giữa các module và giữa các thực thể chính chỉ lưu ID, không dùng `@ManyToOne`/`@OneToMany`. Khi cần dữ liệu liên quan: gom ID rồi lấy một lần bằng `IN (...)`, không gọi `findById` trong vòng lặp.
    - **Chỉ dùng `@OneToMany` khi thỏa đủ cả bốn điều kiện:** danh sách con nhỏ và có giới hạn; phần tử con không có ý nghĩa khi đứng riêng; luôn tải và lưu cùng với cha; quan hệ một chiều, có `@JoinColumn`, `cascade = ALL` và `orphanRemoval = true`.
-   - Hiện chỉ có `Attempt` → `Answer` thỏa điều kiện này. Không có repository riêng cho thực thể con; mọi thay đổi đi qua hàm của cha (`attempt.saveAnswer(...)`).
+   - Hiện có `Attempt` → `Answer` và `Exam` → câu hỏi trong đề (`design_exam_question`). Không có repository riêng cho thực thể con; mọi thay đổi đi qua hàm của cha (`attempt.saveAnswer(...)`).
    - Danh sách lớn hoặc tăng mãi (bài làm của một kỳ thi, câu hỏi của giáo viên): lưu ID ở phía con và truy vấn qua repository, có phân trang khi cần.
 
 ### 6.9. Checklist khi thêm endpoint mới
