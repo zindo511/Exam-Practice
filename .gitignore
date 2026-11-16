@@ -36,3 +36,8 @@ build/
 data/
 frontend/node_modules/
 frontend/dist/
+
+### Environment ###
+.env
+.env.*
+!.env.example

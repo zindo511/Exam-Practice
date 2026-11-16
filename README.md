@@ -281,11 +281,25 @@ Cột **Đảm bảo bởi** cho biết ràng buộc được kiểm tra ở đ�
 
 **Yêu cầu:** JDK 21, PostgreSQL đang chạy, và Docker đang chạy nếu muốn chạy test ([ADR-0014](docs/adr/0014-chi-dung-postgresql-test-bang-testcontainers.md)).
 
-Tạo database một lần:
+Chuẩn bị một lần:
 
-```sql
-CREATE DATABASE exam_practice;
-```
+1. Tạo database:
+
+   ```sql
+   CREATE DATABASE exam_practice;
+   ```
+
+2. Tạo file `.env` từ mẫu rồi điền giá trị thật (`DB_PASSWORD`, `JWT_SECRET`…). File `.env` không được commit.
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Tạo `JWT_SECRET` ngẫu nhiên:
+
+   ```bash
+   openssl rand -base64 48
+   ```
 
 Chạy ứng dụng (Flyway tự tạo bảng khi khởi động):
 
@@ -293,7 +307,7 @@ Chạy ứng dụng (Flyway tự tạo bảng khi khởi động):
 ./mvnw spring-boot:run
 ```
 
-Kết nối mặc định là `jdbc:postgresql://localhost:5432/exam_practice` với `postgres` / `postgres`. Đổi bằng biến môi trường `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`.
+Ứng dụng đọc cấu hình từ biến môi trường và từ file `.env` ở thư mục chạy; biến môi trường thật được ưu tiên hơn. Danh sách biến và ý nghĩa: [`.env.example`](.env.example). Trên server, đặt các biến này làm biến môi trường thật, không dùng file `.env`.
 
 Chạy test (tự bật PostgreSQL trong Docker bằng Testcontainers, không đụng tới database trên máy):
 
@@ -512,7 +526,7 @@ Content-Type: application/problem+json
 - **JDK 21.** Không cần cài Maven, dùng `./mvnw` có sẵn.
 - **PostgreSQL** cho chạy ứng dụng và **Docker** cho chạy test; cách cài đặt xem [mục 5](#5-chạy-dự-án).
 - **Không cần plugin Lombok** cho IDE; dự án không dùng Lombok ([ADR-0008](docs/adr/0008-khong-lombok-mapstruct.md)).
-- **Không commit secret thật** (mật khẩu, khóa). Lưu ý: JWT secret hiện còn ghi cứng trong `application.yaml` để chạy local; phải chuyển sang biến môi trường trước khi deploy hoặc đưa repository lên nơi công khai.
+- **Không commit secret thật** (mật khẩu, khóa). Secret chỉ nằm trong `.env` trên máy mình hoặc biến môi trường của server; `application.yaml` chỉ tham chiếu tên biến. Thêm biến cấu hình mới thì thêm vào `.env.example` cùng commit, kèm chú thích ý nghĩa và cách tạo giá trị.
 
 ### 7.2. Quy trình làm việc
 

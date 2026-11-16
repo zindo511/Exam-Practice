@@ -4,10 +4,14 @@ server:
 spring:
   application:
     name: Exam-Practice
+  config:
+    # Nạp biến từ file .env ở thư mục chạy ứng dụng (nếu có). Biến môi trường thật được ưu tiên hơn.
+    # Danh sách biến: .env.example
+    import: optional:file:.env[.properties]
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/exam_practice}
     username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -18,5 +22,5 @@ spring:
 
 app:
   jwt:
-    secret: "ExamPracticeSuperSecretKeyForJwtSigning2026MustBeAtLeast256BitsLong!!"
-    expiration-ms: 86400000
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
