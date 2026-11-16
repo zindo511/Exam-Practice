@@ -30,3 +30,4 @@ README của dự án mô tả hệ thống **là gì** và **dùng thế nào**
 | [0012](0012-mat-ket-noi-khong-tu-dong-xu-ly.md) | Mất kết nối không tự động xử lý | Đã chấp nhận |
 | [0013](0013-xu-ly-het-gio-lam-bai.md) | Xử lý hết giờ: entity chặn, job tự chốt bài, optimistic locking | Đã chấp nhận |
 | [0014](0014-chi-dung-postgresql-test-bang-testcontainers.md) | Chỉ dùng PostgreSQL, test bằng Testcontainers | Đã chấp nhận |
+| [0015](0015-lay-nguoi-dang-nhap-qua-authentication-principal.md) | Lấy người đang đăng nhập qua `@AuthenticationPrincipal`, service nhận ID qua tham số | Đã chấp nhận |

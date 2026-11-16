@@ -22,6 +22,13 @@ Khi thêm một mã lỗi mới, **bổ sung vào file này** trong cùng commit
 
 Status `404` cho "không tìm thấy", `409` cho vi phạm luật hoặc sai trạng thái, `429` khi vượt giới hạn số lần thử.
 
+### identity
+
+| `code` | Status | Khi nào |
+|---|---|---|
+| `USERNAME_TAKEN` | 409 | Đăng ký với tên đăng nhập đã có (không phân biệt hoa thường) |
+| `INVALID_CREDENTIALS` | 401 | Đăng nhập sai tên đăng nhập hoặc mật khẩu; không nói rõ sai phần nào để không lộ username nào đã tồn tại |
+
 ### examination
 
 | `code` | Status | Khi nào |

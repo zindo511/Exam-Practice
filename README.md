@@ -112,6 +112,7 @@ Giáo viên soạn đề ─▶ mở kỳ thi (sinh mã) ─▶ học sinh nhậ
 
 - Đăng ký, đăng nhập bằng JWT
 - Hai vai trò: **STUDENT** (học sinh) và **TEACHER** (giáo viên)
+- MVP: người đăng ký tự chọn vai trò, kể cả TEACHER (chưa có duyệt tài khoản giáo viên)
 
 ### 3.2. Giáo viên soạn đề (`examdesign`)
 
