@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: Exam-Practice
+  autoconfigure:
+    # Không tạo user mặc định với mật khẩu sinh ngẫu nhiên: user nằm trong bảng identity_user,
+    # xác thực bằng JWT (identity.internal.SecurityConfig).
+    exclude: org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
   config:
     # Nạp biến từ file .env ở thư mục chạy ứng dụng (nếu có). Biến môi trường thật được ưu tiên hơn.
     # Danh sách biến: .env.example
@@ -28,5 +32,6 @@ spring:
 
 app:
   jwt:
-    secret: ${JWT_SECRET}
+    # Để trống nếu thiếu biến, để JwtService báo rõ "chưa được cấu hình" và dừng khởi động.
+    secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
