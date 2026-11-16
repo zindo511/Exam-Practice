@@ -28,7 +28,7 @@ class UserAccountTest {
     }
 
     @Test
-    void register_normalizes_username_and_strips_full_name() {
+    void register_normalizes_username_and_trims_full_name() {
         UserAccount user = UserAccount.register("  Hoc.Sinh  ", HASH, "  Trần Thị B ", Role.TEACHER, NOW);
 
         assertThat(user.getUsername()).isEqualTo("hoc.sinh");

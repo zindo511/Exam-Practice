@@ -74,14 +74,14 @@ class UserAccount {
         return new UserAccount(
                 normalizeUsername(username),
                 requireText(passwordHash, "passwordHash"),
-                requireText(fullName, "fullName").strip(),
+                requireText(fullName, "fullName").trim(),
                 Objects.requireNonNull(role, "role"),
                 Objects.requireNonNull(now, "now"));
     }
 
     /** Dùng chung cho đăng ký và đăng nhập, để hai nơi chuẩn hóa giống nhau. */
     static String normalizeUsername(String username) {
-        return requireText(username, "username").strip().toLowerCase(Locale.ROOT);
+        return requireText(username, "username").trim().toLowerCase(Locale.ROOT);
     }
 
     private static String requireText(String value, String name) {
