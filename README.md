@@ -34,10 +34,18 @@ Hệ thống thi và luyện thi trực tuyến: **giáo viên** soạn đề, m
   - [6.7. Mã lỗi](#67-mã-lỗi)
   - [6.8. Quy tắc cho backend](#68-quy-tắc-cho-backend)
   - [6.9. Checklist khi thêm endpoint mới](#69-checklist-khi-thêm-endpoint-mới)
+- [7. Development / Contribution (Quy chuẩn phát triển & Đóng góp)](#7-development--contribution-quy-chuẩn-phát-triển--đóng-góp)
+  - [7.1. Chuẩn bị môi trường](#71-chuẩn-bị-môi-trường)
+  - [7.2. Quy trình làm việc](#72-quy-trình-làm-việc)
+  - [7.3. Quy ước commit](#73-quy-ước-commit)
+  - [7.4. Kiểm thử](#74-kiểm-thử)
+  - [7.5. Thêm tính năng vào một module](#75-thêm-tính-năng-vào-một-module)
+  - [7.6. Quy ước viết code](#76-quy-ước-viết-code)
+  - [7.7. Review](#77-review)
 
 ## 1. Giới thiệu
 
-- **Công nghệ:** Java 21, Spring Boot 4, Spring Data JPA, Spring Security (JWT), Flyway, H2 (dev) / PostgreSQL
+- **Công nghệ:** Java 21, Spring Boot 4, Spring Data JPA, Spring Security (JWT), Flyway, PostgreSQL; test bằng JUnit 5, ArchUnit, Testcontainers
 - **Kiến trúc:** modular monolith, gồm 4 module là các package con của `vn.exampractice`
 
 | Module | Trách nhiệm |
@@ -181,7 +189,7 @@ flowchart LR
         SH["shared"]
     end
 
-    MODS --> DB[("H2 / PostgreSQL<br/>schema do Flyway quản lý")]
+    MODS --> DB[("PostgreSQL<br/>schema do Flyway quản lý")]
 ```
 
 ### 4.2. Module và hướng phụ thuộc
@@ -271,15 +279,27 @@ Cột **Đảm bảo bởi** cho biết ràng buộc được kiểm tra ở đ�
 
 ## 5. Chạy dự án
 
+**Yêu cầu:** JDK 21, PostgreSQL đang chạy, và Docker đang chạy nếu muốn chạy test ([ADR-0014](docs/adr/0014-chi-dung-postgresql-test-bang-testcontainers.md)).
+
+Tạo database một lần:
+
+```sql
+CREATE DATABASE exam_practice;
+```
+
+Chạy ứng dụng (Flyway tự tạo bảng khi khởi động):
+
 ```bash
 ./mvnw spring-boot:run
 ```
 
+Kết nối mặc định là `jdbc:postgresql://localhost:5432/exam_practice` với `postgres` / `postgres`. Đổi bằng biến môi trường `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`.
+
+Chạy test (tự bật PostgreSQL trong Docker bằng Testcontainers, không đụng tới database trên máy):
+
 ```bash
 ./mvnw test
 ```
-
-Chạy với PostgreSQL: bật profile `postgres` và đặt các biến `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`.
 
 ---
 
@@ -482,3 +502,75 @@ Content-Type: application/problem+json
 - [ ] Đã kiểm tra quyền theo dữ liệu (không chỉ theo vai trò)
 - [ ] Mã lỗi mới (nếu có) đã được thêm vào [docs/error-codes.md](docs/error-codes.md)
 - [ ] Endpoint hiển thị đúng trên Swagger UI
+
+---
+
+## 7. Development / Contribution (Quy chuẩn phát triển & Đóng góp)
+
+### 7.1. Chuẩn bị môi trường
+
+- **JDK 21.** Không cần cài Maven, dùng `./mvnw` có sẵn.
+- **PostgreSQL** cho chạy ứng dụng và **Docker** cho chạy test; cách cài đặt xem [mục 5](#5-chạy-dự-án).
+- **Không cần plugin Lombok** cho IDE; dự án không dùng Lombok ([ADR-0008](docs/adr/0008-khong-lombok-mapstruct.md)).
+- **Không commit secret thật** (mật khẩu, khóa). Lưu ý: JWT secret hiện còn ghi cứng trong `application.yaml` để chạy local; phải chuyển sang biến môi trường trước khi deploy hoặc đưa repository lên nơi công khai.
+
+### 7.2. Quy trình làm việc
+
+1. Tạo nhánh mới từ nhánh chính `main`, mỗi nhánh một việc. Không commit thẳng lên `main`; mọi thay đổi vào `main` qua pull request.
+2. Viết code và test; cập nhật tài liệu liên quan trong cùng nhánh ([mục 7.5](#75-thêm-tính-năng-vào-một-module)).
+3. Chạy `./mvnw test`; **mọi test phải xanh**, kể cả các test kiến trúc.
+4. Mở pull request, mô tả thay đổi gì và vì sao; cần ít nhất một người review ([mục 7.7](#77-review)).
+
+**Tên nhánh:** `<loại>/<module>-<mô-tả-ngắn>`, chữ thường, nối bằng `-`.
+
+| Loại | Dùng khi | Ví dụ |
+|---|---|---|
+| `feature/` | Thêm tính năng | `feature/examination-join-by-code` |
+| `fix/` | Sửa lỗi | `fix/examination-expire-job-double-grading` |
+| `docs/` | Chỉ sửa tài liệu | `docs/adr-optimistic-locking` |
+| `refactor/` | Đổi cấu trúc code, không đổi hành vi | `refactor/proctoring-monitor-query` |
+| `test/` | Chỉ thêm hoặc sửa test | `test/attempt-state-transitions` |
+
+### 7.3. Quy ước commit
+
+- **Tiêu đề** bằng tiếng Việt, bắt đầu bằng động từ, tối đa khoảng 72 ký tự, không có dấu chấm cuối: `Thêm rule kiểm tra quy ước viết code`.
+- **Thân** (nếu cần): cách tiêu đề một dòng trống, gạch đầu dòng, nói **thay đổi gì và vì sao**.
+- Mỗi commit là **một thay đổi trọn vẹn**, và build phải xanh ở mọi commit.
+- Code và tài liệu đi kèm nằm **cùng một commit** (ví dụ mã lỗi mới và dòng tương ứng trong `docs/error-codes.md`), để không có commit nào chứa link hỏng hay tài liệu lệch với code.
+
+### 7.4. Kiểm thử
+
+| Loại | Ở đâu | Kiểm tra gì |
+|---|---|---|
+| Kiến trúc | `ModuleBoundaryTest`, `CodingConventionTest`, `NoCodeGenerationLibrariesTest` | Ranh giới module và quy ước viết code ([mục 4.5](#45-ràng-buộc-kiến-trúc)) |
+| Khởi động | `ExamPracticeApplicationTests` (PostgreSQL qua Testcontainers) | Ứng dụng khởi động được, migration Flyway chạy được, entity khớp schema |
+| Unit | Cạnh entity | Luật nghiệp vụ và chuyển trạng thái ([docs/state-machines.md](docs/state-machines.md)) |
+| Integration | MockMvc | Status code, định dạng ProblemDetail và `code`, phân quyền |
+
+Test cho code của một module đặt **cùng package** với code đó (ví dụ `src/test/java/vn/exampractice/examination/internal/`), để truy cập được các class package-private.
+
+### 7.5. Thêm tính năng vào một module
+
+- [ ] Code đặt đúng cấu trúc module ([mục 4.3](#43-cấu-trúc-bên-trong-một-module)); class trong `internal` mặc định package-private
+- [ ] Cần dữ liệu hay chức năng của module khác thì gọi qua Api của module đó; thêm hàm vào Api của chính mình là thêm một cam kết, cần cân nhắc ([ADR-0004](docs/adr/0004-public-api-va-chieu-phu-thuoc.md))
+- [ ] Đổi schema: thêm migration trong `src/main/resources/db/migration/<module>/`, tên `V<yyyy_MM_dd_HHmm>__<tiền-tố>_<mô_tả>.sql`; enum có `CHECK`; không có foreign key xuyên module; cập nhật [docs/database.md](docs/database.md)
+- [ ] Thêm trạng thái hoặc đổi luật chuyển trạng thái: cập nhật [docs/state-machines.md](docs/state-machines.md)
+- [ ] Mã lỗi mới: thêm vào enum `ErrorCode` của module và [docs/error-codes.md](docs/error-codes.md)
+- [ ] Endpoint mới: theo checklist ở [mục 6.9](#69-checklist-khi-thêm-endpoint-mới)
+- [ ] Quyết định ảnh hưởng nhiều module hoặc khó đảo ngược: viết ADR mới trong [docs/adr](docs/adr/README.md); không sửa ADR đã chấp nhận
+- [ ] Unit test cho luật mới trong entity; integration test cho endpoint mới
+
+### 7.6. Quy ước viết code
+
+Không lặp lại ở đây; xem:
+- [Mục 4.5](#45-ràng-buộc-kiến-trúc): các ràng buộc kiến trúc và công cụ kiểm tra từng ràng buộc.
+- [Mục 6.8](#68-quy-tắc-cho-backend): quy tắc cho backend (DTO, lỗi, mapper, liên kết entity).
+
+### 7.7. Review
+
+Phần máy đã kiểm tra (compiler, ArchUnit, test) thì reviewer không cần soát lại. Reviewer tập trung vào:
+
+- Các ràng buộc có cột **Đảm bảo bởi** là "Review" ở [mục 4.5](#45-ràng-buộc-kiến-trúc): transaction chỉ ghi một module, luật nghiệp vụ nằm trong entity, migration không có foreign key xuyên module, `shared` không chứa logic nghiệp vụ.
+- Luật nghiệp vụ có đúng với [docs/state-machines.md](docs/state-machines.md) không, và có test cho các trường hợp biên (hết giờ, sai trạng thái) không.
+- `detail` của lỗi không lộ thông tin nội bộ.
+- Tài liệu (README, `docs/`) đã được cập nhật cùng code.

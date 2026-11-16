@@ -29,3 +29,4 @@ README của dự án mô tả hệ thống **là gì** và **dùng thế nào**
 | [0011](0011-giam-sat-hoi-qua-examination-api.md) | Giám sát hỏi trạng thái qua `ExaminationApi`, polling trước, chưa dùng event | Đã chấp nhận |
 | [0012](0012-mat-ket-noi-khong-tu-dong-xu-ly.md) | Mất kết nối không tự động xử lý | Đã chấp nhận |
 | [0013](0013-xu-ly-het-gio-lam-bai.md) | Xử lý hết giờ: entity chặn, job tự chốt bài, optimistic locking | Đã chấp nhận |
+| [0014](0014-chi-dung-postgresql-test-bang-testcontainers.md) | Chỉ dùng PostgreSQL, test bằng Testcontainers | Đã chấp nhận |

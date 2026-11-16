@@ -15,7 +15,7 @@ Thiết kế bảng của bản MVP, theo từng module. Migration Flyway đư�
 | Xóa | Câu hỏi và đề xóa mềm bằng `archived_at`; các bảng khác không xóa trong MVP |
 | Ghi đồng thời | Bảng có nhiều bên cùng ghi có cột `version` cho optimistic locking |
 
-Kiểu dữ liệu chọn để chạy được cả trên H2 (chế độ PostgreSQL) lẫn PostgreSQL.
+Database duy nhất là PostgreSQL ([ADR-0014](adr/0014-chi-dung-postgresql-test-bang-testcontainers.md)).
 
 ## 2. Tổng quan
 
@@ -74,7 +74,7 @@ erDiagram
 ```
 
 - `design_exam_question` là danh sách con của `Exam` (`@OneToMany`, đủ bốn điều kiện ở README mục 6.8): `UNIQUE (exam_id, question_id)` để một câu không xuất hiện hai lần trong một đề.
-- **Lựa chọn của câu hỏi lưu dạng JSON** trong một cột `TEXT`, chuyển đổi bằng `AttributeConverter` viết tay. Lựa chọn luôn được đọc và ghi cùng câu hỏi, không bao giờ truy vấn riêng; dùng `TEXT` thay vì `JSONB` để chạy được trên cả H2.
+- **Lựa chọn của câu hỏi lưu dạng JSON** trong một cột `TEXT`, chuyển đổi bằng `AttributeConverter` viết tay. Lựa chọn luôn được đọc và ghi cùng câu hỏi, không bao giờ truy vấn bên trong nội dung JSON, nên `TEXT` là đủ. Nếu sau này cần truy vấn vào trong, có thể chuyển sang `JSONB`.
 
 ## 5. `examination`
 
@@ -143,7 +143,7 @@ erDiagram
 ```
 
 - **`exam_session_question`** là bản sao đề chụp lúc mở kỳ thi ([ADR-0003](adr/0003-snapshot-de-khi-mo-ky-thi.md)). Sau khi mở, kỳ thi không cần `exam_id` nữa.
-- **`access_code` duy nhất trên toàn bảng**, không chỉ trong các kỳ thi đang hoạt động: H2 không hỗ trợ unique index có điều kiện, và 6 ký tự cho khoảng 2 tỷ tổ hợp nên không lo hết mã.
+- **`access_code` duy nhất trên toàn bảng**, không chỉ trong các kỳ thi đang hoạt động: đơn giản hơn unique index có điều kiện, và 6 ký tự cho khoảng 2 tỷ tổ hợp nên không lo hết mã.
 - **`exam_attempt`**: `UNIQUE (session_id, student_id)` đảm bảo mỗi học sinh một bài làm cho mỗi kỳ thi ngay ở tầng database. Khi cho làm nhiều lần sẽ đổi thành `UNIQUE (session_id, student_id, attempt_no)`.
 - **`deadline` lưu sẵn** trong từng bài làm, tính một lần lúc bắt đầu; cộng giờ chỉ sửa bài của một học sinh ([ADR-0013](adr/0013-xu-ly-het-gio-lam-bai.md)).
 - **`exam_answer`**: `UNIQUE (attempt_id, session_question_id)`, mỗi câu một đáp án; đổi đáp án là sửa dòng cũ. Là danh sách con của `Attempt`, không có repository riêng.
