@@ -238,7 +238,7 @@ sequenceDiagram
     participant PR as proctoring
 
     GV->>EX: Mở kỳ thi
-    EX->>ED: getExamSnapshot(examId)
+    EX->>ED: getExamSnapshot(examId, teacherId)
     ED-->>EX: Nội dung đề
     HS->>EX: Nhập mã, bắt đầu làm bài
     loop Trong lúc làm bài
