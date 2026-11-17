@@ -1,10 +1,14 @@
 package vn.exampractice.examdesign.internal;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Truy vấn và lưu {@link Question}. Mọi truy vấn cho giáo viên đều lọc theo {@code teacherId} và
@@ -24,4 +28,8 @@ interface QuestionRepository extends JpaRepository<Question, Long> {
      */
     Page<Question> findByTeacherIdAndArchivedAtIsNullAndContentContainingIgnoreCase(
             Long teacherId, String keyword, Pageable pageable);
+
+    /** Trong {@code ids}, những ID là câu đang dùng của giáo viên; dùng để kiểm tra câu đưa vào đề. */
+    @Query("select q.id from Question q where q.id in :ids and q.teacherId = :teacherId and q.archivedAt is null")
+    List<Long> findActiveIdsOwnedBy(@Param("teacherId") Long teacherId, @Param("ids") Collection<Long> ids);
 }

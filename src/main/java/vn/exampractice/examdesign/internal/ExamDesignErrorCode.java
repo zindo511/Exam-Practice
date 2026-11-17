@@ -5,7 +5,6 @@ import vn.exampractice.shared.error.ErrorCode;
 
 /**
  * Mã lỗi nghiệp vụ của module examdesign (docs/error-codes.md, mục examdesign).
- * Các mã của đề thi được thêm khi viết phần đề.
  */
 enum ExamDesignErrorCode implements ErrorCode {
 
@@ -13,7 +12,13 @@ enum ExamDesignErrorCode implements ErrorCode {
      * Câu hỏi không tồn tại, đã lưu trữ, hoặc thuộc giáo viên khác. Gộp chung để không lộ ID nào
      * đang tồn tại.
      */
-    QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy câu hỏi");
+    QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy câu hỏi"),
+
+    /** Đề không tồn tại, đã lưu trữ, hoặc thuộc giáo viên khác; gộp chung như QUESTION_NOT_FOUND. */
+    EXAM_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy đề"),
+
+    /** Đưa vào đề một câu không tồn tại, đã lưu trữ hoặc của giáo viên khác. */
+    QUESTION_NOT_AVAILABLE(HttpStatus.CONFLICT, "Có câu hỏi không dùng được cho đề");
 
     private final HttpStatus status;
     private final String defaultMessage;
