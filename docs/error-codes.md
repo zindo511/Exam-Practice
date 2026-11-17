@@ -36,6 +36,7 @@ Status `404` cho "không tìm thấy", `409` cho vi phạm luật hoặc sai tr�
 | `QUESTION_NOT_FOUND` | 404 | Câu hỏi không tồn tại, đã lưu trữ, hoặc thuộc giáo viên khác |
 | `EXAM_NOT_FOUND` | 404 | Đề không tồn tại, đã lưu trữ, hoặc thuộc giáo viên khác |
 | `QUESTION_NOT_AVAILABLE` | 409 | Thay danh sách câu của đề bằng câu không tồn tại, đã lưu trữ hoặc của giáo viên khác; `detail` liệt kê ID các câu đó |
+| `QUESTION_IN_USE` | 409 | Lưu trữ câu hỏi đang nằm trong một đề chưa lưu trữ; `detail` liệt kê tên các đề đó |
 
 ### examination
 

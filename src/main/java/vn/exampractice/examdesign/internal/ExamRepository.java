@@ -39,4 +39,14 @@ interface ExamRepository extends JpaRepository<Exam, Long> {
      */
     @Query("select e.id as examId, size(e.questions) as count from Exam e where e.id in :examIds")
     List<QuestionCount> countQuestions(@Param("examIds") Collection<Long> examIds);
+
+    /**
+     * Tiêu đề các đề chưa lưu trữ đang chứa câu hỏi này, theo thứ tự chữ cái; dùng index
+     * {@code ix_design_exam_question_question}. Rỗng nghĩa là câu không nằm trong đề nào đang dùng.
+     */
+    @Query("""
+            select e.title from Exam e join e.questions q
+            where q.questionId = :questionId and e.archivedAt is null
+            order by e.title""")
+    List<String> findActiveExamTitlesContaining(@Param("questionId") Long questionId);
 }

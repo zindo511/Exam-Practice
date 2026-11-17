@@ -18,7 +18,10 @@ enum ExamDesignErrorCode implements ErrorCode {
     EXAM_NOT_FOUND(HttpStatus.NOT_FOUND, "Không tìm thấy đề"),
 
     /** Đưa vào đề một câu không tồn tại, đã lưu trữ hoặc của giáo viên khác. */
-    QUESTION_NOT_AVAILABLE(HttpStatus.CONFLICT, "Có câu hỏi không dùng được cho đề");
+    QUESTION_NOT_AVAILABLE(HttpStatus.CONFLICT, "Có câu hỏi không dùng được cho đề"),
+
+    /** Lưu trữ câu hỏi đang nằm trong một đề chưa lưu trữ; phải bỏ câu khỏi đề trước. */
+    QUESTION_IN_USE(HttpStatus.CONFLICT, "Câu hỏi đang được dùng trong đề");
 
     private final HttpStatus status;
     private final String defaultMessage;

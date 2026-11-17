@@ -1,6 +1,7 @@
 package vn.exampractice.examdesign.internal;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,9 +24,11 @@ class QuestionService {
     private static final Sort NEWEST_FIRST = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"));
 
     private final QuestionRepository repository;
+    private final ExamRepository examRepository;
 
-    QuestionService(QuestionRepository repository) {
+    QuestionService(QuestionRepository repository, ExamRepository examRepository) {
         this.repository = repository;
+        this.examRepository = examRepository;
     }
 
     @Transactional
@@ -62,14 +65,19 @@ class QuestionService {
     }
 
     /**
-     * Lưu trữ (xóa mềm).
-     *
-     * <p>TODO khi viết phần đề: chặn lưu trữ câu đang nằm trong một đề chưa lưu trữ, báo
-     * {@code QUESTION_IN_USE} (state-machines.md mục 3).
+     * Lưu trữ (xóa mềm). Câu đang nằm trong một đề chưa lưu trữ thì báo {@code QUESTION_IN_USE},
+     * kèm tên các đề đó để giáo viên bỏ câu khỏi đề trước (state-machines.md mục 3). Đề đã lưu trữ
+     * không tính, vì không còn dùng cho kỳ thi nào chưa bắt đầu.
      */
     @Transactional
     void archive(Long teacherId, Long questionId) {
-        findActiveOwned(teacherId, questionId).archive(Instant.now());
+        Question question = findActiveOwned(teacherId, questionId);
+        List<String> examTitles = examRepository.findActiveExamTitlesContaining(questionId);
+        if (!examTitles.isEmpty()) {
+            throw new BusinessException(ExamDesignErrorCode.QUESTION_IN_USE,
+                    "Câu hỏi đang nằm trong đề: " + String.join(", ", examTitles));
+        }
+        question.archive(Instant.now());
     }
 
     private Question findActiveOwned(Long teacherId, Long questionId) {

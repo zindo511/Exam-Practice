@@ -1,5 +1,7 @@
 package vn.exampractice.examdesign.internal;
 
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,7 @@ import vn.exampractice.TestcontainersConfiguration;
 import vn.exampractice.support.TestAuth;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
@@ -53,6 +56,9 @@ class QuestionControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private ExamRepository examRepository;
 
     @Test
     void create_returns_201_with_location_and_question() throws Exception {
@@ -166,6 +172,31 @@ class QuestionControllerTest {
     }
 
     @Test
+    void question_in_an_active_exam_cannot_be_archived() throws Exception {
+        long id = create(TEACHER_ID, "Câu đang dùng");
+        exam("Kiểm tra giữa kỳ", id);
+        exam("Đề ôn tập", id);
+
+        perform(delete(URL + "/" + id), teacher(TEACHER_ID), null)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("QUESTION_IN_USE"))
+                .andExpect(jsonPath("$.detail", containsString("Kiểm tra giữa kỳ, Đề ôn tập")));
+
+        perform(get(URL + "/" + id), teacher(TEACHER_ID), null).andExpect(status().isOk());
+    }
+
+    @Test
+    void question_can_be_archived_after_its_exam_is_archived_or_it_is_removed() throws Exception {
+        long inArchivedExam = create(TEACHER_ID, "Câu trong đề đã lưu trữ");
+        long removedFromExam = create(TEACHER_ID, "Câu đã bỏ khỏi đề");
+        exam("Đề cũ", inArchivedExam).archive(Instant.now());
+        exam("Đề đang dùng", removedFromExam).replaceQuestions(List.of(), Instant.now());
+
+        perform(delete(URL + "/" + inArchivedExam), teacher(TEACHER_ID), null).andExpect(status().isNoContent());
+        perform(delete(URL + "/" + removedFromExam), teacher(TEACHER_ID), null).andExpect(status().isNoContent());
+    }
+
+    @Test
     void students_cannot_use_question_bank() throws Exception {
         perform(get(URL), student(3L), null)
                 .andExpect(status().isForbidden())
@@ -184,6 +215,12 @@ class QuestionControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(json).get("id").asLong();
+    }
+
+    private Exam exam(String title, long... questionIds) {
+        Exam exam = Exam.create(TEACHER_ID, title, 15, Instant.now());
+        exam.replaceQuestions(Arrays.stream(questionIds).boxed().toList(), Instant.now());
+        return examRepository.save(exam);
     }
 
     private ResultActions perform(MockHttpServletRequestBuilder request, RequestPostProcessor user, Object body)
