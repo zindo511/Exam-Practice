@@ -20,14 +20,14 @@ stateDiagram-v2
 | Thao tác | Chuyển | Ai, khi nào | Điều kiện | Tác động |
 |---|---|---|---|---|
 | `create` | → `SCHEDULED` | Giáo viên | Đề tồn tại, chưa lưu trữ, có ít nhất 1 câu (hỏi `ExamDesignApi`); `start_at < end_at`; `end_at` ở tương lai | Lưu `exam_id`, sao chép tên đề; sinh `access_code`; `join_open = true` |
-| `open` | `SCHEDULED` → `OPEN` | Giáo viên bấm "Bắt đầu", hoặc job khi tới `start_at` | `now < end_at`; lấy được snapshot đề | Chụp snapshot câu hỏi và thời lượng ([ADR-0003](adr/0003-snapshot-de-khi-mo-ky-thi.md)); ghi `opened_at` |
+| `open` | `SCHEDULED` → `OPEN` | Giáo viên bấm "Bắt đầu", hoặc job khi tới `start_at` | `now < end_at`; đề vẫn dùng được: tồn tại, chưa lưu trữ, có ít nhất 1 câu (hỏi `ExamDesignApi`) | Chụp snapshot câu hỏi và thời lượng ([ADR-0003](adr/0003-snapshot-de-khi-mo-ky-thi.md)); ghi `opened_at` |
 | `close` | `OPEN` → `CLOSED` | Job khi tới `end_at`, hoặc giáo viên kết thúc sớm | — | `join_open = false`; mọi bài `IN_PROGRESS` chuyển `EXPIRED` |
 | `cancel` | `SCHEDULED` → `CANCELLED` | Giáo viên | — | Mã tham gia hết hiệu lực |
 | (job) | `SCHEDULED` → `CLOSED` | Job khi quá `end_at` mà kỳ thi chưa được mở | — | Không có bài làm nào |
 | `lockJoin` / `unlockJoin` | không đổi | Giáo viên | `SCHEDULED` hoặc `OPEN` | Đổi `join_open` |
 | `regenerateCode` | không đổi | Giáo viên | `SCHEDULED` hoặc `OPEN` | Sinh mã mới, mã cũ hết hiệu lực |
 
-Nếu job không mở được kỳ thi khi tới giờ (ví dụ đề đã bị xóa hết câu), kỳ thi giữ `SCHEDULED` và giáo viên thấy lỗi khi bấm mở thủ công.
+Nếu job không mở được kỳ thi khi tới giờ (ví dụ đề đã bị lưu trữ hoặc bị bỏ hết câu), kỳ thi giữ `SCHEDULED` và giáo viên thấy lỗi khi bấm mở thủ công. Danh sách kỳ thi của giáo viên nên đánh dấu các kỳ thi `SCHEDULED` có đề không còn dùng được, để giáo viên hủy và tạo kỳ thi khác trước giờ thi.
 
 **Thao tác được phép theo trạng thái:**
 
@@ -83,8 +83,11 @@ stateDiagram-v2
 
 Trạng thái được lưu bằng cột `archived_at` (rỗng là `ACTIVE`), không xóa hẳn dòng.
 
+**Lưu trữ nghĩa là gì:** giáo viên không muốn câu hỏi hoặc đề đó được dùng cho bất kỳ thứ gì **chưa bắt đầu** nữa. Trên giao diện đây là nút "Xóa". Xóa mềm chỉ để giữ lịch sử, không phải để tiếp tục dùng. Đề chỉ sai vài câu thì **sửa đề**, không lưu trữ.
+
 - Câu hỏi và đề đã lưu trữ không hiện trong danh sách và không thêm được vào đề mới hay kỳ thi mới.
-- **Kỳ thi đã tạo từ một đề vẫn mở được** dù đề sau đó bị lưu trữ: `examdesign` không biết `examination` ([ADR-0004](adr/0004-public-api-va-chieu-phu-thuoc.md)), nên không thể kiểm tra "đề này có đang được kỳ thi nào dùng không" trước khi xóa. Xóa mềm tránh được vấn đề đó.
+- **Kỳ thi đã lên lịch (`SCHEDULED`) không mở được** nếu đề bị lưu trữ sau khi tạo kỳ thi (`EXAM_NOT_AVAILABLE`): giáo viên đã bỏ đề thì không kỳ thi nào chưa bắt đầu được dùng nó. `examdesign` không biết `examination` ([ADR-0004](adr/0004-public-api-va-chieu-phu-thuoc.md)) nên không cảnh báo được lúc lưu trữ; việc cảnh báo do `examination` làm (mục 1).
+- Kỳ thi đã mở hoặc đã đóng **không bị ảnh hưởng**, vì đã chụp snapshot đề ([ADR-0003](adr/0003-snapshot-de-khi-mo-ky-thi.md)). Xóa mềm giữ được dòng gốc để truy vết `exam_id` và `source_question_id`.
 - Câu hỏi đang nằm trong một đề chưa lưu trữ thì không lưu trữ được, phải bỏ khỏi đề trước.
 
 ## 4. Những thứ không phải state machine

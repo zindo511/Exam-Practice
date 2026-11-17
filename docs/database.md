@@ -67,16 +67,19 @@ erDiagram
         timestamptz archived_at "rỗng là đang dùng"
     }
     design_exam_question {
-        bigint exam_id PK, FK
-        int position PK "thứ tự câu, từ 1"
+        bigint id PK
+        bigint exam_id FK
+        int position "thứ tự câu, từ 1"
         bigint question_id FK
-        numeric points "điểm của câu, lớn hơn 0"
     }
     design_exam ||--o{ design_exam_question : "gồm"
     design_question ||--o{ design_exam_question : "được dùng trong"
 ```
 
-- `design_exam_question` là danh sách con của `Exam` (`@OneToMany`, đủ bốn điều kiện ở README mục 6.8): `UNIQUE (exam_id, question_id)` để một câu không xuất hiện hai lần trong một đề.
+- `design_exam_question` là danh sách con của `Exam` (`@OneToMany`, đủ bốn điều kiện ở README mục 6.8), tối đa 100 câu một đề:
+  - `UNIQUE (exam_id, position)` và `UNIQUE (exam_id, question_id)` (một câu không xuất hiện hai lần trong một đề).
+  - Hai ràng buộc này là `DEFERRABLE INITIALLY DEFERRED`, kiểm tra lúc commit: khi thay danh sách câu, Hibernate thêm dòng mới trước rồi mới xóa dòng cũ, nên giữa chừng có lúc trùng.
+  - Khóa chính là `id` riêng thay vì `(exam_id, position)`: cột `exam_id` do `@JoinColumn` phía `Exam` quản lý, thực thể con không có field trỏ về đề.
 - **Lựa chọn của câu hỏi lưu dạng JSON** trong một cột `TEXT`, chuyển đổi bằng `AttributeConverter` viết tay. Lựa chọn luôn được đọc và ghi cùng câu hỏi, không bao giờ truy vấn bên trong nội dung JSON, nên `TEXT` là đủ. Nếu sau này cần truy vấn vào trong, có thể chuyển sang `JSONB`.
 
 ## 5. `examination`
@@ -107,7 +110,6 @@ erDiagram
         text content
         text options_json
         smallint correct_option "chỉ dùng để chấm, không gửi xuống trình duyệt"
-        numeric points
     }
     exam_participant {
         bigint id PK
@@ -123,7 +125,8 @@ erDiagram
         timestamptz started_at
         timestamptz deadline
         timestamptz submitted_at "rỗng khi đang làm"
-        numeric score "rỗng khi đang làm"
+        int correct_count "số câu đúng, rỗng khi đang làm"
+        numeric score "thang 10, 2 chữ số thập phân, rỗng khi đang làm"
         bigint version
     }
     exam_answer {

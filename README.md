@@ -118,7 +118,8 @@ Giáo viên soạn đề ─▶ mở kỳ thi (sinh mã) ─▶ học sinh nhậ
 
 - Tạo, sửa, xóa **câu hỏi trắc nghiệm** (nhiều lựa chọn, một đáp án đúng)
 - Tìm kiếm và phân trang ngân hàng câu hỏi của mình
-- Ghép câu hỏi thành **đề thi**: chọn câu, sắp thứ tự, đặt điểm từng câu, đặt thời lượng làm bài
+- Ghép câu hỏi thành **đề thi**: chọn câu, sắp thứ tự, đặt thời lượng làm bài (1–300 phút); tối đa 100 câu một đề
+- **Mỗi câu 1 điểm**, điểm bài quy về thang 10: số câu đúng / tổng số câu × 10, làm tròn 2 chữ số ([ADR-0016](docs/adr/0016-moi-cau-mot-diem-quy-ve-thang-10.md))
 - Một đề có thể dùng lại cho nhiều kỳ thi
 
 ### 3.3. Tổ chức kỳ thi (`examination`)
@@ -237,7 +238,7 @@ sequenceDiagram
     participant PR as proctoring
 
     GV->>EX: Mở kỳ thi
-    EX->>ED: getExamSnapshot(examId)
+    EX->>ED: getExamSnapshot(examId, teacherId)
     ED-->>EX: Nội dung đề
     HS->>EX: Nhập mã, bắt đầu làm bài
     loop Trong lúc làm bài

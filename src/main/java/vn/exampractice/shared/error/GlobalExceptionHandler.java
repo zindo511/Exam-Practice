@@ -7,6 +7,7 @@ import java.util.Set;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ProblemDetail;
@@ -97,6 +98,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ServletRequestBindingException.class)
     ProblemDetail handleMissingRequestPart(ServletRequestBindingException ex, HttpServletRequest request) {
         return ProblemDetailFactory.create(CommonErrorCode.MALFORMED_REQUEST, request.getRequestURI());
+    }
+
+    /**
+     * {@code ?sort=} theo field không tồn tại, ví dụ {@code sort=khongCo,asc}. Spring Data chỉ phát
+     * hiện khi chạy truy vấn, nên lỗi đi ra từ repository.
+     */
+    @ExceptionHandler(PropertyReferenceException.class)
+    ProblemDetail handleUnknownSortProperty(PropertyReferenceException ex, HttpServletRequest request) {
+        String detail = "Không sắp xếp được theo '" + ex.getPropertyName() + "'";
+        return ProblemDetailFactory.create(CommonErrorCode.MALFORMED_REQUEST, detail, request.getRequestURI());
     }
 
     // ---------- 401, 403: từ filter của Security hoặc từ bên trong controller/service ----------

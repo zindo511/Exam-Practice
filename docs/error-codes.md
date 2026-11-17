@@ -9,7 +9,7 @@ Khi thêm một mã lỗi mới, **bổ sung vào file này** trong cùng commit
 | `code` | Status | Khi nào |
 |---|---|---|
 | `VALIDATION_FAILED` | 400 | Dữ liệu đầu vào không hợp lệ (kèm `errors`) |
-| `MALFORMED_REQUEST` | 400 | Body không đọc được, sai kiểu tham số, thiếu tham số bắt buộc |
+| `MALFORMED_REQUEST` | 400 | Body không đọc được, sai kiểu tham số, thiếu tham số bắt buộc, `sort` theo field không tồn tại |
 | `UNAUTHENTICATED` | 401 | Thiếu token, token sai hoặc hết hạn |
 | `FORBIDDEN` | 403 | Không đủ quyền |
 | `NOT_FOUND` | 404 | Không tìm thấy tài nguyên hoặc endpoint |
@@ -28,6 +28,15 @@ Status `404` cho "không tìm thấy", `409` cho vi phạm luật hoặc sai tr�
 |---|---|---|
 | `USERNAME_TAKEN` | 409 | Đăng ký với tên đăng nhập đã có (không phân biệt hoa thường) |
 | `INVALID_CREDENTIALS` | 401 | Đăng nhập sai tên đăng nhập hoặc mật khẩu; không nói rõ sai phần nào để không lộ username nào đã tồn tại |
+
+### examdesign
+
+| `code` | Status | Khi nào |
+|---|---|---|
+| `QUESTION_NOT_FOUND` | 404 | Câu hỏi không tồn tại, đã lưu trữ, hoặc thuộc giáo viên khác |
+| `EXAM_NOT_FOUND` | 404 | Đề không tồn tại, đã lưu trữ, hoặc thuộc giáo viên khác |
+| `QUESTION_NOT_AVAILABLE` | 409 | Thay danh sách câu của đề bằng câu không tồn tại, đã lưu trữ hoặc của giáo viên khác; `detail` liệt kê ID các câu đó |
+| `QUESTION_IN_USE` | 409 | Lưu trữ câu hỏi đang nằm trong một đề chưa lưu trữ; `detail` liệt kê tên các đề đó |
 
 ### examination
 
