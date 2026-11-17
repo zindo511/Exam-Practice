@@ -1,7 +1,10 @@
 package vn.exampractice.examdesign.internal;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+
 /**
- * Truy vấn câu hỏi của một giáo viên: tìm theo nội dung, phân trang, chỉ câu chưa lưu trữ.
+ * Truy vấn và lưu {@link Question}. Truy vấn tìm kiếm và phân trang theo giáo viên được thêm khi
+ * viết QuestionService.
  */
-interface QuestionRepository {
+interface QuestionRepository extends JpaRepository<Question, Long> {
 }
