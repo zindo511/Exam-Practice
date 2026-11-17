@@ -1,5 +1,6 @@
 package vn.exampractice.identity.internal;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,8 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Đăng ký và đăng nhập; công khai, không cần token (README 6.2, 6.3).
+ *
+ * <p>{@code @SecurityRequirements} rỗng để Swagger UI không đòi token cho hai endpoint này.
  */
 @RestController
+@SecurityRequirements
 @RequestMapping("/api/auth")
 class AuthController {
 

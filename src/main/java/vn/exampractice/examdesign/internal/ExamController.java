@@ -3,6 +3,7 @@ package vn.exampractice.examdesign.internal;
 import java.net.URI;
 
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +53,7 @@ class ExamController {
     @GetMapping
     PageResponse<ExamResponse> list(@AuthenticationPrincipal AuthenticatedUser user,
                                     @RequestParam(required = false) String keyword,
-                                    Pageable pageable) {
+                                    @ParameterObject Pageable pageable) {
         return examService.list(user.id(), keyword, pageable);
     }
 

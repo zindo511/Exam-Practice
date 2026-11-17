@@ -332,6 +332,8 @@ Khi ứng dụng đang chạy:
 | Swagger UI (xem và gọi thử API) | `http://localhost:8080/swagger-ui.html` |
 | OpenAPI JSON (dùng để sinh client) | `http://localhost:8080/v3/api-docs` |
 
+Gọi thử API cần đăng nhập trên Swagger UI: gọi `POST /api/auth/login`, copy `accessToken`, bấm **Authorize** rồi dán token (không gõ chữ `Bearer`). Các request sau tự gửi kèm header `Authorization`.
+
 Swagger UI cho biết **có những endpoint nào và dữ liệu ra sao**. Tài liệu này quy định **cách mọi endpoint phải hành xử**.
 
 ### 6.2. Quy ước chung
@@ -517,7 +519,7 @@ Content-Type: application/problem+json
 - [ ] Request và response đều là DTO; request có validation
 - [ ] Đã kiểm tra quyền theo dữ liệu (không chỉ theo vai trò)
 - [ ] Mã lỗi mới (nếu có) đã được thêm vào [docs/error-codes.md](docs/error-codes.md)
-- [ ] Endpoint hiển thị đúng trên Swagger UI
+- [ ] Endpoint hiển thị đúng trên Swagger UI; tham số `Pageable` có `@ParameterObject` để hiện thành `page`, `size`, `sort`; endpoint công khai có `@SecurityRequirements` rỗng
 
 ---
 
