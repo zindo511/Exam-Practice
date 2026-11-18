@@ -3,6 +3,7 @@ package vn.exampractice.identity.internal;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -21,9 +22,13 @@ import vn.exampractice.shared.security.ProblemDetailAuthenticationEntryPoint;
  *   <li>Phân quyền thô theo tiền tố URL (README 6.2). Quyền theo dữ liệu do từng module tự kiểm
  *       tra.</li>
  *   <li>401/403 trả {@code ProblemDetail} qua hai handler của shared.security (README 6.3).</li>
+ *   <li>{@code @EnableMethodSecurity}: khi một tiền tố cho nhiều vai trò (ví dụ {@code /api/exam/**}),
+ *       controller tự giới hạn thêm bằng {@code @PreAuthorize}. Lỗi 403 từ đây do
+ *       {@code GlobalExceptionHandler} chuyển thành {@code ProblemDetail}.</li>
  * </ul>
  */
 @Configuration
+@EnableMethodSecurity
 @EnableConfigurationProperties(JwtProperties.class)
 class SecurityConfig {
 

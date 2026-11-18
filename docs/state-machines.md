@@ -25,7 +25,8 @@ stateDiagram-v2
 | `cancel` | `SCHEDULED` → `CANCELLED` | Giáo viên | — | Mã tham gia hết hiệu lực |
 | (job) | `SCHEDULED` → `CLOSED` | Job khi quá `end_at` mà kỳ thi chưa được mở | — | Không có bài làm nào |
 | `lockJoin` / `unlockJoin` | không đổi | Giáo viên | `SCHEDULED` hoặc `OPEN` | Đổi `join_open` |
-| `regenerateCode` | không đổi | Giáo viên | `SCHEDULED` hoặc `OPEN` | Sinh mã mới, mã cũ hết hiệu lực |
+
+Mã tham gia sinh một lần khi tạo và không đổi; mã bị lộ thì giáo viên khóa tham gia ([ADR-0010](adr/0010-tham-gia-bang-ma-ky-thi.md)).
 
 Nếu job không mở được kỳ thi khi tới giờ (ví dụ đề đã bị lưu trữ hoặc bị bỏ hết câu), kỳ thi giữ `SCHEDULED` và giáo viên thấy lỗi khi bấm mở thủ công. Danh sách kỳ thi của giáo viên nên đánh dấu các kỳ thi `SCHEDULED` có đề không còn dùng được, để giáo viên hủy và tạo kỳ thi khác trước giờ thi.
 
@@ -35,7 +36,7 @@ Nếu job không mở được kỳ thi khi tới giờ (ví dụ đề đã b�
 |---|---|---|---|---|
 | Học sinh nhập mã tham gia | ✓ nếu `join_open` | ✓ nếu `join_open` | ✗ | ✗ |
 | Học sinh bắt đầu làm bài | ✗ | ✓ | ✗ | ✗ |
-| Khóa/mở tham gia, đổi mã | ✓ | ✓ | ✗ | ✗ |
+| Khóa/mở tham gia | ✓ | ✓ | ✗ | ✗ |
 | Giám sát | — | ✓ | xem lại | — |
 | Xem kết quả | — | bài đã kết thúc | ✓ | — |
 

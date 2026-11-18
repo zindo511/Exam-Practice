@@ -7,7 +7,8 @@ README của dự án mô tả hệ thống **là gì** và **dùng thế nào**
 ## Quy tắc
 
 - Mỗi quyết định một file, đặt tên `NNNN-ten-ngan.md`, đánh số tăng dần.
-- **Không sửa nội dung** một ADR đã chấp nhận (chỉ sửa lỗi chính tả). Khi đổi quyết định, viết ADR mới và đổi trạng thái ADR cũ thành *Bị thay thế bởi ADR-NNNN*.
+- **Điều chỉnh nhỏ** một quyết định đã có (thu hẹp phạm vi, bỏ hoặc thêm một chi tiết): sửa thẳng ADR đó, cập nhật các mục Quyết định, Phương án đã cân nhắc, Hệ quả, và ghi `(cập nhật YYYY-MM-DD: ...)` cạnh dòng Ngày. Lịch sử thay đổi xem bằng `git log`.
+- **Đổi hẳn hướng** một quyết định (chọn phương án khác hoàn toàn): viết ADR mới và đổi trạng thái ADR cũ thành *Bị thay thế bởi ADR-NNNN*, để giữ lại lý do của cả hai lần quyết định.
 - Trạng thái: **Đề xuất** → **Đã chấp nhận** → (có thể) **Bị thay thế** hoặc **Bị hủy**.
 - Viết ADR mới khi một quyết định ảnh hưởng nhiều module, khó đảo ngược, hoặc có thể bị hỏi lại "sao không làm cách khác?".
 - Bắt đầu từ [mẫu](0000-template.md).
