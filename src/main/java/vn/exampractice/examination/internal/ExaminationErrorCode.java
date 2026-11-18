@@ -5,7 +5,7 @@ import vn.exampractice.shared.error.ErrorCode;
 
 /**
  * Mã lỗi nghiệp vụ của module examination (docs/error-codes.md, mục examination). Các mã của phần
- * tham gia và bài làm được thêm khi viết các phần đó.
+ * bài làm được thêm khi viết phần đó.
  */
 enum ExaminationErrorCode implements ErrorCode {
 
@@ -16,7 +16,16 @@ enum ExaminationErrorCode implements ErrorCode {
     INVALID_SESSION_STATE(HttpStatus.CONFLICT, "Thao tác không hợp lệ với trạng thái hiện tại của kỳ thi"),
 
     /** Đề không tồn tại, không phải của giáo viên, đã lưu trữ hoặc không có câu nào. */
-    EXAM_NOT_AVAILABLE(HttpStatus.CONFLICT, "Đề không dùng được");
+    EXAM_NOT_AVAILABLE(HttpStatus.CONFLICT, "Đề không dùng được"),
+
+    /**
+     * Mã sai, kỳ thi đã kết thúc, hoặc giáo viên đã khóa tham gia. Gộp chung để không lộ mã nào
+     * đang tồn tại (ADR-0010).
+     */
+    INVALID_ACCESS_CODE(HttpStatus.CONFLICT, "Mã kỳ thi không đúng hoặc kỳ thi không nhận tham gia"),
+
+    /** Nhập sai mã quá 5 lần trong 15 phút; tạm chặn nhập mã 15 phút (ADR-0010). */
+    ACCESS_CODE_ATTEMPTS_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Nhập sai mã quá nhiều lần, vui lòng thử lại sau");
 
     private final HttpStatus status;
     private final String defaultMessage;

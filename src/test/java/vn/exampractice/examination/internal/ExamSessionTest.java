@@ -133,6 +133,21 @@ class ExamSessionTest {
     }
 
     @Test
+    void accepts_join_only_while_not_ended_and_join_open() {
+        ExamSession session = scheduled();
+        assertThat(session.acceptsJoin()).isTrue();
+
+        session.lockJoin();
+        assertThat(session.acceptsJoin()).isFalse();
+        session.unlockJoin();
+        session.open(SNAPSHOT, 45, NOW);
+        assertThat(session.acceptsJoin()).isTrue();
+
+        session.close(NOW.plusSeconds(60));
+        assertThat(session.acceptsJoin()).isFalse();
+    }
+
+    @Test
     void questions_cannot_be_changed_from_outside() {
         ExamSession session = scheduled();
         session.open(SNAPSHOT, 45, NOW);

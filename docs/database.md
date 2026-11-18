@@ -153,7 +153,8 @@ erDiagram
 - **`exam_attempt`**: `UNIQUE (session_id, student_id)` đảm bảo mỗi học sinh một bài làm cho mỗi kỳ thi ngay ở tầng database. Khi cho làm nhiều lần sẽ đổi thành `UNIQUE (session_id, student_id, attempt_no)`.
 - **`deadline` lưu sẵn** trong từng bài làm, tính một lần lúc bắt đầu; cộng giờ chỉ sửa bài của một học sinh ([ADR-0013](adr/0013-xu-ly-het-gio-lam-bai.md)).
 - **`exam_answer`**: `UNIQUE (attempt_id, session_question_id)`, mỗi câu một đáp án; đổi đáp án là sửa dòng cũ. Là danh sách con của `Attempt`, không có repository riêng.
-- **`exam_join_failure`** ghi các lần nhập sai mã để giới hạn 5 lần trong 15 phút ([ADR-0010](adr/0010-tham-gia-bang-ma-ky-thi.md)). Dòng cũ hơn 15 phút có thể xóa định kỳ.
+- **`exam_participant`**: `UNIQUE (session_id, student_id)`, mỗi học sinh một dòng trong mỗi kỳ thi. Không phải danh sách con của `ExamSession` (số người tham gia lớn), nên có repository riêng.
+- **`exam_join_failure`** ghi các lần nhập sai mã để giới hạn 5 lần trong 15 phút ([ADR-0010](adr/0010-tham-gia-bang-ma-ky-thi.md)). Quyết định chặn cần đọc lại 30 phút gần nhất (15 phút đếm lần sai và 15 phút bị chặn), nên dòng cũ hơn 30 phút có thể xóa định kỳ.
 - **`version`** có ở `exam_session` (giáo viên và job cùng mở hoặc đóng kỳ thi) và `exam_attempt` (học sinh, giáo viên và job cùng ghi).
 
 ## 6. `proctoring`

@@ -44,7 +44,7 @@ Status `404` cho "không tìm thấy", `409` cho vi phạm luật hoặc sai tr�
 |---|---|---|
 | `SESSION_NOT_FOUND` | 404 | Kỳ thi không tồn tại hoặc thuộc giáo viên khác |
 | `ATTEMPT_NOT_FOUND` | 404 | Bài làm không tồn tại hoặc không thuộc về người gọi |
-| `INVALID_ACCESS_CODE` | 409 | Mã kỳ thi sai, hết hiệu lực, hoặc kỳ thi đã khóa tham gia |
+| `INVALID_ACCESS_CODE` | 409 | Mã kỳ thi sai, kỳ thi đã kết thúc, hoặc đã khóa tham gia; chỉ mã sai mới tính vào giới hạn nhập sai |
 | `ACCESS_CODE_ATTEMPTS_EXCEEDED` | 429 | Nhập sai mã quá 5 lần trong 15 phút; tạm chặn nhập mã 15 phút |
 | `SESSION_NOT_OPEN` | 409 | Kỳ thi chưa mở hoặc đã đóng |
 | `INVALID_SESSION_STATE` | 409 | Thao tác không hợp lệ với trạng thái hiện tại của kỳ thi (ví dụ hủy kỳ thi đã mở) |

@@ -204,6 +204,14 @@ class ExamSession {
         return this.teacherId.equals(teacherId);
     }
 
+    /**
+     * Còn nhận học sinh mới nhập mã không: kỳ thi chưa kết thúc ({@code SCHEDULED} hoặc
+     * {@code OPEN}) và giáo viên chưa khóa tham gia (state-machines.md mục 1, ADR-0010).
+     */
+    boolean acceptsJoin() {
+        return joinOpen && (status == SessionStatus.SCHEDULED || status == SessionStatus.OPEN);
+    }
+
     private void requireStatus(Set<SessionStatus> allowed, String action) {
         if (!allowed.contains(status)) {
             throw invalidState("Không thể " + action + " kỳ thi đang ở trạng thái " + status);
