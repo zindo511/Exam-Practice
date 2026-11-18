@@ -68,6 +68,8 @@ class StudentSessionControllerTest {
                 .andExpect(jsonPath("$.id").value(session.get("id").asLong()))
                 .andExpect(jsonPath("$.title").value("Kiểm tra"))
                 .andExpect(jsonPath("$.status").value("SCHEDULED"))
+                .andExpect(jsonPath("$.resultVisibility").value("SCORE"))
+                .andExpect(jsonPath("$.maxScore").value(20))
                 .andExpect(jsonPath("$.accessCode").doesNotExist())
                 .andExpect(jsonPath("$.examId").doesNotExist());
 
@@ -238,7 +240,8 @@ class StudentSessionControllerTest {
         perform(put("/api/design/exams/" + exam + "/questions"), teacher(TEACHER_ID),
                 Map.of("questionIds", List.of(question))).andExpect(status().isOk());
         String json = perform(post("/api/exam/sessions"), teacher(TEACHER_ID), Map.of("examId", exam,
-                "startAt", startAt.toString(), "endAt", startAt.plus(Duration.ofHours(2)).toString()))
+                "startAt", startAt.toString(), "endAt", startAt.plus(Duration.ofHours(2)).toString(),
+                "resultVisibility", "SCORE", "maxScore", 20))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         return objectMapper.readTree(json);
     }

@@ -48,6 +48,8 @@ class ExamSessionRepositoryTest {
 
         assertThat(found.getStatus()).isEqualTo(SessionStatus.OPEN);
         assertThat(found.getDurationMinutes()).isEqualTo(45);
+        assertThat(found.getResultVisibility()).isEqualTo(ResultVisibility.SCORE_AND_ANSWERS);
+        assertThat(found.getMaxScore()).isEqualTo(20);
         assertThat(found.getQuestions()).extracting(SessionQuestion::getPosition).containsExactly(1, 2);
         assertThat(found.getQuestions().get(1).getOptions()).containsExactly("3", "4", "5");
         assertThat(jdbc.queryForObject("SELECT status FROM exam_session WHERE id = ?", String.class, id))
@@ -76,6 +78,6 @@ class ExamSessionRepositoryTest {
 
     private static ExamSession session(String code) {
         return ExamSession.schedule(1L, 5L, "Kiểm tra", NOW.plus(Duration.ofHours(1)), NOW.plus(Duration.ofHours(3)),
-                code, NOW);
+                ResultVisibility.SCORE_AND_ANSWERS, 20, code, NOW);
     }
 }

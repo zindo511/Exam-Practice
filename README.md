@@ -119,7 +119,7 @@ Giáo viên soạn đề ─▶ mở kỳ thi (sinh mã) ─▶ học sinh nhậ
 - Tạo, sửa, xóa **câu hỏi trắc nghiệm** (nhiều lựa chọn, một đáp án đúng)
 - Tìm kiếm và phân trang ngân hàng câu hỏi của mình
 - Ghép câu hỏi thành **đề thi**: chọn câu, sắp thứ tự, đặt thời lượng làm bài (1–300 phút); tối đa 100 câu một đề
-- **Mỗi câu 1 điểm**, điểm bài quy về thang 10: số câu đúng / tổng số câu × 10, làm tròn 2 chữ số ([ADR-0016](docs/adr/0016-moi-cau-mot-diem-quy-ve-thang-10.md))
+- **Mỗi câu 1 điểm**; điểm bài quy về thang điểm giáo viên chọn khi tạo kỳ thi: số câu đúng / tổng số câu × thang điểm, làm tròn 2 chữ số ([ADR-0016](docs/adr/0016-moi-cau-mot-diem-quy-ve-thang-10.md))
 - Một đề có thể dùng lại cho nhiều kỳ thi
 
 ### 3.3. Tổ chức kỳ thi (`examination`)
@@ -128,12 +128,12 @@ Các dòng xếp theo thứ tự diễn ra của một kỳ thi:
 
 | Giáo viên | Học sinh |
 |---|---|
-| Tạo **kỳ thi** từ một đề, với giờ mở và giờ đóng; hệ thống sinh **mã tham gia** (6 ký tự) | Nhập mã để **tham gia** kỳ thi và vào phòng chờ |
+| Tạo **kỳ thi** từ một đề, với giờ mở và giờ đóng, **thang điểm** (1–100, mặc định 10) và **học sinh được xem gì** sau khi thi; hệ thống sinh **mã tham gia** (6 ký tự) | Nhập mã để **tham gia** kỳ thi và vào phòng chờ |
 | **Mở kỳ thi**: hệ thống **chụp snapshot đề**, nên sửa đề gốc sau đó không ảnh hưởng bài đang thi | **Bắt đầu làm bài** khi kỳ thi đã mở; mỗi học sinh một lượt làm bài |
 | Khóa không cho vào thêm khi lớp đã vào đủ | Đáp án được **tự động lưu** sau mỗi lần chọn |
 | | Đồng hồ đếm ngược theo **giờ server**: hạn chót = lúc bắt đầu + thời lượng, không vượt giờ đóng kỳ thi |
 | | **Nộp bài**, hoặc hệ thống **tự nộp khi hết giờ** |
-| Xem kết quả và điểm của từng học sinh | Xem điểm sau khi nộp |
+| Xem kết quả và điểm của từng học sinh; đổi cài đặt xem kết quả bất cứ lúc nào (ví dụ công bố điểm sau khi thi) | Tùy cài đặt của kỳ thi: không thấy điểm, thấy điểm ngay khi bài kết thúc, hoặc thấy điểm và **đáp án sau khi kỳ thi đóng** |
 
 **Hệ thống tự đảm bảo:**
 - **Tự chấm** trắc nghiệm ngay khi nộp

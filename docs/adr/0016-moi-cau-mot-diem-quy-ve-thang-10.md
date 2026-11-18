@@ -1,7 +1,7 @@
-# ADR-0016: Mỗi câu 1 điểm, điểm bài quy về thang 10
+# ADR-0016: Mỗi câu 1 điểm, điểm bài quy về thang điểm của kỳ thi
 
 - **Trạng thái:** Đã chấp nhận
-- **Ngày:** 2026-11-17
+- **Ngày:** 2026-11-17 (cập nhật 2026-11-18: thang điểm do giáo viên chọn cho từng kỳ thi thay vì luôn là 10)
 
 ## Bối cảnh
 
@@ -17,7 +17,7 @@ MVP chỉ có câu trắc nghiệm **một đáp án đúng**: mỗi câu chỉ 
 ## Quyết định
 
 - **Mỗi câu 1 điểm:** đúng được 1, sai hoặc bỏ trống được 0. Đề và kỳ thi không lưu điểm theo câu (bỏ cột `points` ở `design_exam_question` và `exam_session_question`).
-- **Điểm bài quy về thang 10:** `score = số câu đúng / tổng số câu × 10`, làm tròn 2 chữ số thập phân theo kiểu làm tròn lên từ 5 (`HALF_UP`). Ví dụ đúng 7/30 câu được 2.33.
+- **Điểm bài quy về thang điểm của kỳ thi:** giáo viên chọn thang (`max_score`, số nguyên 1–100, mặc định 10) khi tạo kỳ thi; thang cố định từ lúc tạo. `score = số câu đúng / tổng số câu × max_score`, làm tròn 2 chữ số thập phân theo kiểu làm tròn lên từ 5 (`HALF_UP`). Ví dụ thang 10, đúng 7/30 câu được 2.33; thang 20 thì được 4.67.
 - **Bài làm lưu cả `correct_count` và `score`:** giáo viên thấy được "đúng 21/30" chứ không chỉ "7.00"; nếu sau này đổi cách quy đổi vẫn tính lại được từ số câu đúng.
 - Giáo viên ghép đề chỉ cần chọn câu và sắp thứ tự; `PUT /api/design/exams/{id}/questions` nhận danh sách `questionId`.
 
@@ -25,7 +25,8 @@ MVP chỉ có câu trắc nghiệm **một đáp án đúng**: mỗi câu chỉ 
 
 - **Điểm riêng từng câu, điểm bài là tổng điểm câu đúng:** linh hoạt nhất, nhưng vướng các vấn đề ở phần Bối cảnh, trong khi MVP chưa có loại câu nào cần điểm khác nhau.
 - **Trọng số từng câu, quy về thang 10 khi chấm:** giải quyết được chuyện chia không hết và vẫn cho câu khó nặng hơn, nhưng thêm một trường giáo viên phải nhập mà MVP chưa cần. Đây là hướng mở rộng khi cần (xem Hệ quả).
-- **Lưu điểm theo thang tùy chọn (10, 100…):** thêm cấu hình mà người dùng MVP chưa yêu cầu.
+- **Luôn quy về thang 10:** đơn giản nhất, nhưng giáo viên dùng thang 20 hoặc 100 phải tự quy đổi lại.
+- **Thang điểm gắn với đề thay vì kỳ thi:** một đề có thể dùng cho nhiều kỳ thi với thang khác nhau; thang là cách công bố kết quả của một buổi thi, nên thuộc về kỳ thi.
 
 ## Hệ quả
 

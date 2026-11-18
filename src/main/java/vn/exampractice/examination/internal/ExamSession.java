@@ -42,6 +42,9 @@ class ExamSession {
 
     static final int ACCESS_CODE_LENGTH = 6;
     static final int MAX_TITLE_LENGTH = 200;
+    static final int MIN_MAX_SCORE = 1;
+    static final int MAX_MAX_SCORE = 100;
+    static final int DEFAULT_MAX_SCORE = 10;
 
     /** Một câu trong snapshot đề, đã chuyển từ DTO của examdesign sang kiểu của examination. */
     record SnapshotQuestion(int position, Long sourceQuestionId, String content, List<String> options,
@@ -84,6 +87,15 @@ class ExamSession {
     @Column(nullable = false, length = 20)
     private SessionStatus status;
 
+    /** Học sinh được xem gì sau khi bài kết thúc; đổi được bất cứ lúc nào. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "result_visibility", nullable = false, length = 20)
+    private ResultVisibility resultVisibility;
+
+    /** Thang điểm: điểm bài = số câu đúng / tổng số câu × maxScore (ADR-0016). Cố định từ lúc tạo. */
+    @Column(name = "max_score", nullable = false, updatable = false)
+    private int maxScore;
+
     @Column(name = "opened_at")
     private Instant openedAt;
 
@@ -116,10 +128,11 @@ class ExamSession {
      * Lên lịch kỳ thi mới ở trạng thái {@code SCHEDULED}, cho phép tham gia ngay. Việc đề có dùng
      * được không do service hỏi {@code ExamDesignApi} trước khi gọi hàm này.
      *
-     * @param title tiêu đề đề tại thời điểm tạo
+     * @param title    tiêu đề đề tại thời điểm tạo
+     * @param maxScore thang điểm, từ {@value #MIN_MAX_SCORE} tới {@value #MAX_MAX_SCORE}
      */
     static ExamSession schedule(Long teacherId, Long examId, String title, Instant startAt, Instant endAt,
-                                String accessCode, Instant now) {
+                                ResultVisibility resultVisibility, int maxScore, String accessCode, Instant now) {
         Objects.requireNonNull(teacherId, "teacherId");
         Objects.requireNonNull(examId, "examId");
         Objects.requireNonNull(now, "now");
@@ -134,7 +147,12 @@ class ExamSession {
         if (title == null || title.isBlank() || title.length() > MAX_TITLE_LENGTH) {
             throw new IllegalArgumentException("title must not be blank and at most " + MAX_TITLE_LENGTH + " characters");
         }
+        if (maxScore < MIN_MAX_SCORE || maxScore > MAX_MAX_SCORE) {
+            throw new IllegalArgumentException("maxScore must be between " + MIN_MAX_SCORE + " and " + MAX_MAX_SCORE);
+        }
         ExamSession session = new ExamSession(teacherId, examId, now);
+        session.resultVisibility = Objects.requireNonNull(resultVisibility, "resultVisibility");
+        session.maxScore = maxScore;
         session.title = title;
         session.startAt = startAt;
         session.endAt = endAt;
@@ -198,6 +216,14 @@ class ExamSession {
     void unlockJoin() {
         requireStatus(Set.of(SessionStatus.SCHEDULED, SessionStatus.OPEN), "mở lại tham gia");
         this.joinOpen = true;
+    }
+
+    /**
+     * Đổi những gì học sinh được xem sau khi bài kết thúc. Được đổi ở mọi trạng thái, kể cả sau khi
+     * kỳ thi đóng, để giáo viên công bố điểm sau khi xem xét.
+     */
+    void changeResultVisibility(ResultVisibility visibility) {
+        this.resultVisibility = Objects.requireNonNull(visibility, "visibility");
     }
 
     boolean isOwnedBy(Long teacherId) {
@@ -267,6 +293,14 @@ class ExamSession {
 
     SessionStatus getStatus() {
         return status;
+    }
+
+    ResultVisibility getResultVisibility() {
+        return resultVisibility;
+    }
+
+    int getMaxScore() {
+        return maxScore;
     }
 
     Instant getOpenedAt() {

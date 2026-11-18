@@ -39,13 +39,40 @@ class ExamSessionTest {
 
     @Test
     void schedule_requires_start_before_end_and_end_in_future() {
-        assertThatThrownBy(() -> ExamSession.schedule(1L, 5L, "Kiểm tra", END, START, "ABC123", NOW))
+        assertThatThrownBy(() -> ExamSession.schedule(1L, 5L, "Kiểm tra", END, START, ResultVisibility.SCORE, 10, "ABC123", NOW))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> ExamSession.schedule(1L, 5L, "Kiểm tra", NOW.minusSeconds(120),
-                NOW.minusSeconds(60), "ABC123", NOW))
+                NOW.minusSeconds(60), ResultVisibility.SCORE, 10, "ABC123", NOW))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> ExamSession.schedule(1L, 5L, "Kiểm tra", START, END, "ABC", NOW))
+        assertThatThrownBy(() -> ExamSession.schedule(1L, 5L, "Kiểm tra", START, END, ResultVisibility.SCORE, 10, "ABC", NOW))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void schedule_keeps_result_settings_and_limits_max_score_to_1_100() {
+        ExamSession session = ExamSession.schedule(1L, 5L, "Kiểm tra", START, END, ResultVisibility.HIDDEN, 20,
+                "ABC123", NOW);
+        assertThat(session.getResultVisibility()).isEqualTo(ResultVisibility.HIDDEN);
+        assertThat(session.getMaxScore()).isEqualTo(20);
+
+        for (int invalid : new int[] {0, 101}) {
+            assertThatThrownBy(() -> ExamSession.schedule(1L, 5L, "Kiểm tra", START, END, ResultVisibility.SCORE,
+                    invalid, "ABC123", NOW))
+                    .as("maxScore %d", invalid)
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    /** Giáo viên đổi được cài đặt xem kết quả ở mọi trạng thái, kể cả sau khi kỳ thi đóng. */
+    @Test
+    void result_visibility_can_change_in_any_state() {
+        ExamSession session = scheduled();
+        session.open(SNAPSHOT, 45, NOW);
+        session.close(NOW.plusSeconds(60));
+
+        session.changeResultVisibility(ResultVisibility.SCORE_AND_ANSWERS);
+
+        assertThat(session.getResultVisibility()).isEqualTo(ResultVisibility.SCORE_AND_ANSWERS);
     }
 
     @Test
@@ -157,7 +184,7 @@ class ExamSessionTest {
     }
 
     private static ExamSession scheduled() {
-        return ExamSession.schedule(1L, 5L, "Kiểm tra", START, END, "ABC123", NOW);
+        return ExamSession.schedule(1L, 5L, "Kiểm tra", START, END, ResultVisibility.SCORE, 10, "ABC123", NOW);
     }
 
     private static void expectInvalidState(Executable action) {

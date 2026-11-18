@@ -97,6 +97,8 @@ erDiagram
         timestamptz end_at
         int duration_minutes "chụp lúc mở, rỗng trước đó"
         varchar status "SCHEDULED, OPEN, CLOSED, CANCELLED"
+        varchar result_visibility "HIDDEN, SCORE, SCORE_AND_ANSWERS"
+        int max_score "thang điểm 1-100, cố định từ lúc tạo"
         timestamptz opened_at
         timestamptz closed_at
         timestamptz created_at
@@ -126,7 +128,7 @@ erDiagram
         timestamptz deadline
         timestamptz submitted_at "rỗng khi đang làm"
         int correct_count "số câu đúng, rỗng khi đang làm"
-        numeric score "thang 10, 2 chữ số thập phân, rỗng khi đang làm"
+        numeric score "theo max_score của kỳ thi, 2 chữ số thập phân, rỗng khi đang làm"
         bigint version
     }
     exam_answer {

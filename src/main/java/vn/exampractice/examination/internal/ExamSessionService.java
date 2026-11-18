@@ -52,7 +52,7 @@ class ExamSessionService {
         ExamSummary exam = examDesignApi.getExamSummary(request.examId(), teacherId)
                 .orElseThrow(() -> new BusinessException(ExaminationErrorCode.EXAM_NOT_AVAILABLE));
         ExamSession session = ExamSession.schedule(teacherId, exam.id(), exam.title(), request.startAt(),
-                request.endAt(), uniqueCode(), Instant.now());
+                request.endAt(), request.resultVisibility(), request.maxScoreOrDefault(), uniqueCode(), Instant.now());
         return SessionResponse.from(repository.save(session));
     }
 
@@ -98,6 +98,12 @@ class ExamSessionService {
     @Transactional
     SessionResponse cancel(Long teacherId, Long sessionId) {
         return change(teacherId, sessionId, ExamSession::cancel);
+    }
+
+    /** Đổi những gì học sinh được xem sau khi bài kết thúc; được đổi ở mọi trạng thái. */
+    @Transactional
+    SessionResponse changeResultVisibility(Long teacherId, Long sessionId, ResultVisibility visibility) {
+        return change(teacherId, sessionId, session -> session.changeResultVisibility(visibility));
     }
 
     @Transactional

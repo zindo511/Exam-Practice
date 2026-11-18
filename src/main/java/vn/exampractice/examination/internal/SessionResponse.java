@@ -14,6 +14,8 @@ record SessionResponse(
         String accessCode,
         boolean joinOpen,
         SessionStatus status,
+        ResultVisibility resultVisibility,
+        int maxScore,
         Instant startAt,
         Instant endAt,
         Integer durationMinutes,
@@ -23,7 +25,8 @@ record SessionResponse(
 
     static SessionResponse from(ExamSession session) {
         return new SessionResponse(session.getId(), session.getExamId(), session.getTitle(),
-                session.getAccessCode(), session.isJoinOpen(), session.getStatus(), session.getStartAt(),
+                session.getAccessCode(), session.isJoinOpen(), session.getStatus(), session.getResultVisibility(),
+                session.getMaxScore(), session.getStartAt(),
                 session.getEndAt(), session.getDurationMinutes(), session.getOpenedAt(), session.getClosedAt(),
                 session.getCreatedAt());
     }

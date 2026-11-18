@@ -25,6 +25,7 @@ stateDiagram-v2
 | `cancel` | `SCHEDULED` → `CANCELLED` | Giáo viên | — | Mã tham gia hết hiệu lực |
 | (job) | `SCHEDULED` → `CLOSED` | Job khi quá `end_at` mà kỳ thi chưa được mở | — | Không có bài làm nào |
 | `lockJoin` / `unlockJoin` | không đổi | Giáo viên | `SCHEDULED` hoặc `OPEN` | Đổi `join_open` |
+| `changeResultVisibility` | không đổi | Giáo viên | Mọi trạng thái | Đổi những gì học sinh được xem sau khi bài kết thúc (`HIDDEN`, `SCORE`, `SCORE_AND_ANSWERS`); đáp án chỉ hiện khi kỳ thi đã `CLOSED` |
 
 Mã tham gia sinh một lần khi tạo và không đổi; mã bị lộ thì giáo viên khóa tham gia ([ADR-0010](adr/0010-tham-gia-bang-ma-ky-thi.md)).
 
