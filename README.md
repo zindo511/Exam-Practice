@@ -82,7 +82,7 @@ Lý do của các quyết định kỹ thuật (bối cảnh, phương án đã 
 | Hết giờ nhưng học sinh không bấm nộp (đóng trình duyệt, mất mạng) | **Job trên server tự chốt bài** khoảng mỗi 30 giây và chấm điểm từ đáp án đã lưu; không phụ thuộc vào trình duyệt |
 | Đáp án đúng bị lộ qua API khi đang làm bài | Dữ liệu gửi xuống trình duyệt **không chứa đáp án đúng**; chỉ server chấm |
 | Học sinh sửa đáp án sau khi đã nộp | Bài làm có **vòng đời trạng thái**; luật nằm trong entity nên không có đường tắt |
-| Người ngoài vào thi, mã kỳ thi bị lộ | Bắt buộc đăng nhập; giáo viên **khóa tham gia** hoặc **đổi mã**; giới hạn số lần nhập sai |
+| Người ngoài vào thi, mã kỳ thi bị lộ | Bắt buộc đăng nhập; giáo viên **khóa tham gia** khi lớp đã vào đủ ([ADR-0010](docs/adr/0010-tham-gia-bang-ma-ky-thi.md)); giới hạn số lần nhập sai |
 | Phát hiện đề sai đáp án khi đang thi | MVP: giữ nguyên kỳ thi, sửa đề gốc cho lần sau. Sau MVP: chấm lại hoặc hủy câu cho cả kỳ thi |
 
 ### 2.3. Vấn đề kỹ thuật
@@ -130,7 +130,7 @@ Các dòng xếp theo thứ tự diễn ra của một kỳ thi:
 |---|---|
 | Tạo **kỳ thi** từ một đề, với giờ mở và giờ đóng; hệ thống sinh **mã tham gia** (6 ký tự) | Nhập mã để **tham gia** kỳ thi và vào phòng chờ |
 | **Mở kỳ thi**: hệ thống **chụp snapshot đề**, nên sửa đề gốc sau đó không ảnh hưởng bài đang thi | **Bắt đầu làm bài** khi kỳ thi đã mở; mỗi học sinh một lượt làm bài |
-| Khóa không cho vào thêm, đổi mã tham gia khi bị lộ | Đáp án được **tự động lưu** sau mỗi lần chọn |
+| Khóa không cho vào thêm khi lớp đã vào đủ | Đáp án được **tự động lưu** sau mỗi lần chọn |
 | | Đồng hồ đếm ngược theo **giờ server**: hạn chót = lúc bắt đầu + thời lượng, không vượt giờ đóng kỳ thi |
 | | **Nộp bài**, hoặc hệ thống **tự nộp khi hết giờ** |
 | Xem kết quả và điểm của từng học sinh | Xem điểm sau khi nộp |
@@ -575,7 +575,7 @@ Test cho code của một module đặt **cùng package** với code đó (ví d
 - [ ] Thêm trạng thái hoặc đổi luật chuyển trạng thái: cập nhật [docs/state-machines.md](docs/state-machines.md)
 - [ ] Mã lỗi mới: thêm vào enum `ErrorCode` của module và [docs/error-codes.md](docs/error-codes.md)
 - [ ] Endpoint mới: theo checklist ở [mục 6.9](#69-checklist-khi-thêm-endpoint-mới)
-- [ ] Quyết định ảnh hưởng nhiều module hoặc khó đảo ngược: viết ADR mới trong [docs/adr](docs/adr/README.md); không sửa ADR đã chấp nhận
+- [ ] Quyết định ảnh hưởng nhiều module hoặc khó đảo ngược: viết ADR mới trong [docs/adr](docs/adr/README.md); điều chỉnh nhỏ một quyết định đã có thì sửa thẳng ADR đó (quy tắc ở [docs/adr/README.md](docs/adr/README.md#quy-tắc))
 - [ ] Unit test cho luật mới trong entity; integration test cho endpoint mới
 
 ### 7.6. Quy ước viết code
