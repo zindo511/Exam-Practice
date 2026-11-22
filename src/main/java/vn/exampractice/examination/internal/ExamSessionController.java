@@ -1,6 +1,7 @@
 package vn.exampractice.examination.internal;
 
 import java.net.URI;
+import java.util.List;
 
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
@@ -33,9 +34,11 @@ import vn.exampractice.shared.web.PageResponse;
 class ExamSessionController {
 
     private final ExamSessionService sessionService;
+    private final AttemptService attemptService;
 
-    ExamSessionController(ExamSessionService sessionService) {
+    ExamSessionController(ExamSessionService sessionService, AttemptService attemptService) {
         this.sessionService = sessionService;
+        this.attemptService = attemptService;
     }
 
     /** 201 kèm header {@code Location} trỏ tới kỳ thi vừa tạo (README 6.4). */
@@ -59,6 +62,12 @@ class ExamSessionController {
     @GetMapping("/{id}")
     SessionResponse get(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id) {
         return sessionService.get(user.id(), id);
+    }
+
+    /** Kết quả của mọi bài làm trong kỳ thi, sắp theo lúc bắt đầu; bài đang làm chưa có điểm. */
+    @GetMapping("/{id}/attempts")
+    List<AttemptSummaryResponse> attempts(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id) {
+        return attemptService.listForSession(user.id(), id);
     }
 
     /** Mở kỳ thi và chụp snapshot đề; được mở sớm trước giờ bắt đầu. */

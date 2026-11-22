@@ -19,4 +19,7 @@ interface ExamSessionRepository extends JpaRepository<ExamSession, Long> {
     Page<ExamSession> findByTeacherIdAndStatus(Long teacherId, SessionStatus status, Pageable pageable);
 
     boolean existsByAccessCode(String accessCode);
+
+    /** Kỳ thi theo mã tham gia, mọi trạng thái; người gọi tự kiểm tra mã còn hiệu lực không. */
+    Optional<ExamSession> findByAccessCode(String accessCode);
 }

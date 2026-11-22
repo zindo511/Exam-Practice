@@ -38,12 +38,14 @@ class ExamSessionService {
     private final ExamSessionRepository repository;
     private final ExamDesignApi examDesignApi;
     private final AccessCodeGenerator codeGenerator;
+    private final AttemptService attemptService;
 
     ExamSessionService(ExamSessionRepository repository, ExamDesignApi examDesignApi,
-                       AccessCodeGenerator codeGenerator) {
+                       AccessCodeGenerator codeGenerator, AttemptService attemptService) {
         this.repository = repository;
         this.examDesignApi = examDesignApi;
         this.codeGenerator = codeGenerator;
+        this.attemptService = attemptService;
     }
 
     /** Đề phải dùng được (của giáo viên này, chưa lưu trữ, có câu); tiêu đề kỳ thi sao chép từ đề. */
@@ -89,10 +91,14 @@ class ExamSessionService {
         return SessionResponse.from(session);
     }
 
-    /** Kết thúc sớm kỳ thi đang mở. Chuyển các bài đang làm sang EXPIRED sẽ thêm khi có bài làm. */
+    /** Kết thúc sớm kỳ thi đang mở; các bài đang làm chuyển {@code EXPIRED} và được chấm ngay. */
     @Transactional
     SessionResponse close(Long teacherId, Long sessionId) {
-        return change(teacherId, sessionId, session -> session.close(Instant.now()));
+        Instant now = Instant.now();
+        return change(teacherId, sessionId, session -> {
+            session.close(now);
+            attemptService.expireAllInSession(session, now);
+        });
     }
 
     @Transactional

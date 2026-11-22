@@ -152,7 +152,8 @@ erDiagram
 - **`access_code` duy nhất trên toàn bảng**, không chỉ trong các kỳ thi đang hoạt động: đơn giản hơn unique index có điều kiện, và 6 ký tự cho khoảng 2 tỷ tổ hợp nên không lo hết mã.
 - **`exam_attempt`**: `UNIQUE (session_id, student_id)` đảm bảo mỗi học sinh một bài làm cho mỗi kỳ thi ngay ở tầng database. Khi cho làm nhiều lần sẽ đổi thành `UNIQUE (session_id, student_id, attempt_no)`.
 - **`deadline` lưu sẵn** trong từng bài làm, tính một lần lúc bắt đầu; cộng giờ chỉ sửa bài của một học sinh ([ADR-0013](adr/0013-xu-ly-het-gio-lam-bai.md)).
-- **`exam_answer`**: `UNIQUE (attempt_id, session_question_id)`, mỗi câu một đáp án; đổi đáp án là sửa dòng cũ. Là danh sách con của `Attempt`, không có repository riêng.
+- **`exam_answer`**: `UNIQUE (attempt_id, session_question_id)`, mỗi câu một đáp án; đổi đáp án là sửa dòng cũ, bỏ chọn là xóa dòng. Là danh sách con của `Attempt`, không có repository riêng.
+- **`exam_attempt.score`** là `NUMERIC(4, 2)` (tối đa `10.00`). Ràng buộc `CHECK` bảo đảm bài `IN_PROGRESS` chưa có `submitted_at`, `correct_count`, `score`, còn bài đã kết thúc thì có đủ cả ba ([ADR-0016](adr/0016-moi-cau-mot-diem-quy-ve-thang-10.md)).
 - **`exam_join_failure`** ghi các lần nhập sai mã để giới hạn 5 lần trong 15 phút ([ADR-0010](adr/0010-tham-gia-bang-ma-ky-thi.md)). Dòng cũ hơn 15 phút có thể xóa định kỳ.
 - **`version`** có ở `exam_session` (giáo viên và job cùng mở hoặc đóng kỳ thi) và `exam_attempt` (học sinh, giáo viên và job cùng ghi).
 

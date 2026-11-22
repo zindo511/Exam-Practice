@@ -58,18 +58,20 @@ stateDiagram-v2
 
 | Thao tác | Chuyển | Ai | Điều kiện | Tác động |
 |---|---|---|---|---|
-| `start` | → `IN_PROGRESS` | Học sinh | Kỳ thi `OPEN`; đã tham gia; chưa có bài làm trong kỳ thi này | `deadline = min(now + thời lượng, end_at)` ([ADR-0013](adr/0013-xu-ly-het-gio-lam-bai.md)) |
+| `start` | → `IN_PROGRESS` | Học sinh | Kỳ thi `OPEN` và chưa tới `end_at`; đã tham gia; chưa có bài làm trong kỳ thi này | `deadline = min(now + thời lượng, end_at)` ([ADR-0013](adr/0013-xu-ly-het-gio-lam-bai.md)) |
 | `saveAnswer` | giữ `IN_PROGRESS` | Học sinh | `now ≤ deadline + 5 giây` | Thêm hoặc sửa đáp án của một câu |
+| `clearAnswer` | giữ `IN_PROGRESS` | Học sinh | `now ≤ deadline + 5 giây` | Bỏ chọn một câu (xóa đáp án) |
 | `extendTime` | giữ `IN_PROGRESS` | Giáo viên | `now ≤ deadline`; số phút > 0 | `deadline` cộng thêm số phút |
 | `submit` | → `SUBMITTED` | Học sinh | `now ≤ deadline + 5 giây` | Chấm điểm; `submitted_at = now` |
 | `forceSubmit` | → `SUBMITTED` | Giáo viên | — | Chấm điểm; `submitted_at = now` |
-| `expire` | → `EXPIRED` | Job, hoặc khi kỳ thi đóng | Quá hạn chót, hoặc kỳ thi đóng sớm | Chấm điểm; `submitted_at = deadline` (hoặc lúc đóng) |
+| `expire` | → `EXPIRED` | Job | `now > deadline + 5 giây` (không cắt ngang lần nộp hợp lệ trong ân hạn) | Chấm điểm; `submitted_at = deadline` |
+| `expireOnSessionClose` | → `EXPIRED` | Khi kỳ thi đóng | — | Chấm điểm; `submitted_at` = lúc đóng, hoặc `deadline` nếu hạn chót đã qua trước đó |
 | `lock` | → `LOCKED` | Giáo viên | — | Chấm điểm; `submitted_at = now`; bài được đánh dấu để giáo viên xem xét |
 
 - Cả ba trạng thái kết thúc đều **có điểm**, tính từ các đáp án đã lưu. Trạng thái cho biết bài kết thúc bằng cách nào.
 - Thao tác lên bài đã kết thúc trả lỗi theo trạng thái: `SUBMITTED` → `ATTEMPT_ALREADY_SUBMITTED`, `EXPIRED` hoặc quá hạn chót → `ATTEMPT_EXPIRED`, `LOCKED` → `ATTEMPT_LOCKED`.
 - Bắt đầu làm bài khi chưa tham gia trả `NOT_A_PARTICIPANT`; bắt đầu lần thứ hai trả `ATTEMPT_ALREADY_STARTED`.
-- Mọi thay đổi đều làm tăng `version` (kể cả lưu đáp án), để phát hiện thao tác đồng thời.
+- Mọi thay đổi đều làm tăng `version` (kể cả lưu đáp án), để phát hiện thao tác đồng thời. Sửa một đáp án có sẵn không làm Hibernate tự tăng `version` của bài, nên mọi thao tác ghi tải bài bằng khóa `OPTIMISTIC_FORCE_INCREMENT`.
 - Khi sau này có câu hỏi tự luận, sẽ cần thêm trạng thái chờ chấm giữa lúc kết thúc và lúc có điểm.
 
 ## 3. Câu hỏi và đề (`Question`, `Exam`, module `examdesign`)
