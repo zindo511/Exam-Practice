@@ -33,3 +33,4 @@ README của dự án mô tả hệ thống **là gì** và **dùng thế nào**
 | [0014](0014-chi-dung-postgresql-test-bang-testcontainers.md) | Chỉ dùng PostgreSQL, test bằng Testcontainers | Đã chấp nhận |
 | [0015](0015-lay-nguoi-dang-nhap-qua-authentication-principal.md) | Lấy người đang đăng nhập qua `@AuthenticationPrincipal`, service nhận ID qua tham số | Đã chấp nhận |
 | [0016](0016-moi-cau-mot-diem-quy-ve-thang-10.md) | Mỗi câu 1 điểm, điểm bài quy về thang điểm của kỳ thi | Đã chấp nhận |
+| [0017](0017-thu-lai-khi-xung-dot-optimistic-locking.md) | Thử lại khi xung đột optimistic locking trên bài làm | Đã chấp nhận |

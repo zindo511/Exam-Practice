@@ -4,7 +4,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -228,6 +230,30 @@ class ExamSession {
 
     boolean isOwnedBy(Long teacherId) {
         return this.teacherId.equals(teacherId);
+    }
+
+    /**
+     * Học sinh bắt đầu làm bài được không: kỳ thi đang mở và chưa tới giờ đóng. Job có thể chậm vài
+     * giây mới chuyển kỳ thi quá giờ sang {@code CLOSED}, nên kiểm tra cả giờ.
+     */
+    void ensureAcceptsAttempts(Instant now) {
+        if (status != SessionStatus.OPEN || !Objects.requireNonNull(now, "now").isBefore(endAt)) {
+            throw new BusinessException(ExaminationErrorCode.SESSION_NOT_OPEN);
+        }
+    }
+
+    /** Câu trong bản chụp đề theo ID; rỗng nếu không thuộc kỳ thi này. */
+    Optional<SessionQuestion> question(Long sessionQuestionId) {
+        return questions.stream().filter(q -> q.getId().equals(sessionQuestionId)).findFirst();
+    }
+
+    /** Cách chấm bài của kỳ thi: đáp án đúng trong bản chụp đề và thang điểm (ADR-0016). */
+    Grading grading() {
+        if (questions.isEmpty()) {
+            throw new IllegalStateException("Session " + id + " has not been opened");
+        }
+        return new Grading(questions.stream()
+                .collect(Collectors.toMap(SessionQuestion::getId, SessionQuestion::getCorrectOption)), maxScore);
     }
 
     /**

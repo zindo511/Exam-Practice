@@ -1,6 +1,6 @@
 # ADR-0013: Xử lý hết giờ làm bài
 
-- **Trạng thái:** Đã chấp nhận
+- **Trạng thái:** Đã chấp nhận; phần optimistic locking được bổ sung bởi [ADR-0017](0017-thu-lai-khi-xung-dot-optimistic-locking.md)
 - **Ngày:** 2026-11-15
 
 ## Bối cảnh

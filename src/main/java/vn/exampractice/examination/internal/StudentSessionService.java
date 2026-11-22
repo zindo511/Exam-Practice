@@ -4,8 +4,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,15 +33,18 @@ class StudentSessionService {
 
     private final ExamSessionRepository sessionRepository;
     private final SessionParticipantRepository participantRepository;
+    private final AttemptRepository attemptRepository;
     private final JoinFailureRepository failureRepository;
     private final JoinFailureRecorder failureRecorder;
 
     StudentSessionService(ExamSessionRepository sessionRepository,
                           SessionParticipantRepository participantRepository,
+                          AttemptRepository attemptRepository,
                           JoinFailureRepository failureRepository,
                           JoinFailureRecorder failureRecorder) {
         this.sessionRepository = sessionRepository;
         this.participantRepository = participantRepository;
+        this.attemptRepository = attemptRepository;
         this.failureRepository = failureRepository;
         this.failureRecorder = failureRecorder;
     }
@@ -69,22 +76,30 @@ class StudentSessionService {
         }
         ExamSession session = found.get();
         if (participantRepository.existsBySessionIdAndStudentId(session.getId(), studentId)) {
-            return MySessionResponse.from(session);
+            return withAttempt(session, studentId);
         }
         if (!session.acceptsJoin()) {
             throw new BusinessException(ExaminationErrorCode.INVALID_ACCESS_CODE);
         }
         participantRepository.save(SessionParticipant.join(session.getId(), studentId, now));
-        return MySessionResponse.from(session);
+        return MySessionResponse.from(session, null);
     }
 
-    /** Các kỳ thi đã tham gia, để quay lại phòng chờ mà không nhập lại mã. */
+    /**
+     * Các kỳ thi đã tham gia, kèm bài làm của học sinh trong từng kỳ thi, để quay lại phòng chờ, làm
+     * tiếp hoặc xem điểm mà không nhập lại mã. Bài làm của cả trang lấy bằng một truy vấn.
+     */
     @Transactional(readOnly = true)
     PageResponse<MySessionResponse> mySessions(Long studentId, Pageable pageable) {
         Pageable sorted = pageable.getSort().isSorted()
                 ? pageable
                 : PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), LATEST_START_FIRST);
-        return PageResponse.from(sessionRepository.findJoinedBy(studentId, sorted).map(MySessionResponse::from));
+        Page<ExamSession> page = sessionRepository.findJoinedBy(studentId, sorted);
+        Map<Long, Attempt> attempts = page.isEmpty() ? Map.of()
+                : attemptRepository.findByStudentIdAndSessionIdIn(studentId,
+                                page.getContent().stream().map(ExamSession::getId).toList()).stream()
+                        .collect(Collectors.toMap(Attempt::getSessionId, Function.identity()));
+        return PageResponse.from(page.map(session -> MySessionResponse.from(session, attempts.get(session.getId()))));
     }
 
     /** Phòng chờ của một kỳ thi; chưa tham gia thì coi như không có. */
@@ -94,8 +109,13 @@ class StudentSessionService {
             throw new BusinessException(ExaminationErrorCode.SESSION_NOT_FOUND);
         }
         return sessionRepository.findById(sessionId)
-                .map(MySessionResponse::from)
+                .map(session -> withAttempt(session, studentId))
                 .orElseThrow(() -> new BusinessException(ExaminationErrorCode.SESSION_NOT_FOUND));
+    }
+
+    private MySessionResponse withAttempt(ExamSession session, Long studentId) {
+        return MySessionResponse.from(session,
+                attemptRepository.findBySessionIdAndStudentId(session.getId(), studentId).orElse(null));
     }
 
     private void requireNotBlocked(Long studentId, Instant now) {

@@ -268,7 +268,7 @@ Cột **Đảm bảo bởi** cho biết ràng buộc được kiểm tra ở đ�
 | 9 | Schema chỉ thay đổi qua migration Flyway | Runtime (Hibernate `validate`) | [0006](docs/adr/0006-flyway-va-du-lieu-theo-module.md) |
 | 10 | `shared` không phụ thuộc module nào và không chứa logic nghiệp vụ | ArchUnit (phụ thuộc) + review (logic nghiệp vụ) | [0004](docs/adr/0004-public-api-va-chieu-phu-thuoc.md) |
 | 11 | Không dùng Lombok, MapStruct | Test (thư viện không có trên classpath) | [0008](docs/adr/0008-khong-lombok-mapstruct.md) |
-| 12 | Hạn chót luôn tính theo giờ server; mọi thao tác ghi lên bài làm kiểm tra trạng thái và hạn chót trong entity; `Attempt` có `@Version` | Review | [0013](docs/adr/0013-xu-ly-het-gio-lam-bai.md) |
+| 12 | Hạn chót luôn tính theo giờ server; mọi thao tác ghi lên bài làm kiểm tra trạng thái và hạn chót trong entity; `Attempt` có `@Version`, mọi thao tác ghi tăng version và tự thử lại tối đa 3 lần khi xung đột | Review | [0013](docs/adr/0013-xu-ly-het-gio-lam-bai.md), [0017](docs/adr/0017-thu-lai-khi-xung-dot-optimistic-locking.md) |
 | 13 | Enum trong entity lưu dạng chuỗi (`@Enumerated(EnumType.STRING)`), không lưu số thứ tự | ArchUnit | — |
 | 14 | Controller không dùng repository trực tiếp; đi qua service | ArchUnit | — |
 

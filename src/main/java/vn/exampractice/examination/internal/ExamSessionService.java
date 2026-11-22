@@ -36,14 +36,18 @@ class ExamSessionService {
     private static final int MAX_CODE_ATTEMPTS = 5;
 
     private final ExamSessionRepository repository;
+    private final AttemptRepository attemptRepository;
     private final ExamDesignApi examDesignApi;
     private final AccessCodeGenerator codeGenerator;
+    private final ConflictRetry retry;
 
-    ExamSessionService(ExamSessionRepository repository, ExamDesignApi examDesignApi,
-                       AccessCodeGenerator codeGenerator) {
+    ExamSessionService(ExamSessionRepository repository, AttemptRepository attemptRepository,
+                       ExamDesignApi examDesignApi, AccessCodeGenerator codeGenerator, ConflictRetry retry) {
         this.repository = repository;
+        this.attemptRepository = attemptRepository;
         this.examDesignApi = examDesignApi;
         this.codeGenerator = codeGenerator;
+        this.retry = retry;
     }
 
     /** Đề phải dùng được (của giáo viên này, chưa lưu trữ, có câu); tiêu đề kỳ thi sao chép từ đề. */
@@ -89,10 +93,23 @@ class ExamSessionService {
         return SessionResponse.from(session);
     }
 
-    /** Kết thúc sớm kỳ thi đang mở. Chuyển các bài đang làm sang EXPIRED sẽ thêm khi có bài làm. */
-    @Transactional
+    /**
+     * Kết thúc sớm kỳ thi đang mở. Mọi bài còn đang làm chuyển sang {@code EXPIRED} và được chấm từ đáp
+     * án đã lưu, ghi nhận kết thúc lúc đóng (hoặc hạn chót nếu sớm hơn), state-machines.md mục 1.
+     *
+     * <p>Chạy qua {@link ConflictRetry} vì có thể đụng học sinh đang lưu đáp án hay nộp bài (ADR-0017).
+     */
     SessionResponse close(Long teacherId, Long sessionId) {
-        return change(teacherId, sessionId, session -> session.close(Instant.now()));
+        return retry.run(() -> {
+            ExamSession session = findOwned(teacherId, sessionId);
+            Instant now = Instant.now();
+            session.close(now);
+            Grading grading = session.grading();
+            for (Attempt attempt : attemptRepository.findBySessionIdAndStatus(sessionId, AttemptStatus.IN_PROGRESS)) {
+                attempt.expire(grading, attempt.getDeadline().isBefore(now) ? attempt.getDeadline() : now);
+            }
+            return SessionResponse.from(session);
+        });
     }
 
     @Transactional

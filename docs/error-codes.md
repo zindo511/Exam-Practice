@@ -54,3 +54,4 @@ Status `404` cho "không tìm thấy", `409` cho vi phạm luật hoặc sai tr�
 | `ATTEMPT_EXPIRED` | 409 | Bài thi đã hết giờ |
 | `ATTEMPT_ALREADY_SUBMITTED` | 409 | Bài thi đã nộp |
 | `ATTEMPT_LOCKED` | 409 | Bài thi bị giáo viên khóa |
+| `SESSION_QUESTION_NOT_FOUND` | 404 | Lưu đáp án cho câu không thuộc bản chụp đề của kỳ thi |
