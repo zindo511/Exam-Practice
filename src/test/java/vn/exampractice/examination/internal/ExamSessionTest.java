@@ -183,6 +183,37 @@ class ExamSessionTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
+    @Test
+    void job_opens_from_start_time_until_end_time() {
+        ExamSession session = scheduled();
+
+        assertThat(session.isDueToOpen(START.minusMillis(1))).isFalse();
+        assertThat(session.isDueToOpen(START)).isTrue();
+        assertThat(session.isDueToOpen(END.minusMillis(1))).isTrue();
+        assertThat(session.isDueToOpen(END)).isFalse();
+
+        session.open(SNAPSHOT, 45, START);
+        assertThat(session.isDueToOpen(START)).as("đã mở").isFalse();
+    }
+
+    /** Job chờ hết ân hạn của bài làm sau giờ đóng, như khi chốt bài (ADR-0013). */
+    @Test
+    void job_closes_only_after_end_time_plus_grace() {
+        ExamSession open = scheduled();
+        open.open(SNAPSHOT, 45, START);
+        Instant graceEnd = END.plus(Attempt.GRACE);
+
+        assertThat(open.isDueToClose(graceEnd)).isFalse();
+        assertThat(open.isDueToClose(graceEnd.plusMillis(1))).isTrue();
+        assertThat(scheduled().isDueToClose(graceEnd.plusMillis(1))).as("chưa từng mở").isTrue();
+
+        ExamSession cancelled = scheduled();
+        cancelled.cancel();
+        assertThat(cancelled.isDueToClose(graceEnd.plusMillis(1))).isFalse();
+        open.close(END);
+        assertThat(open.isDueToClose(graceEnd.plusMillis(1))).as("đã đóng").isFalse();
+    }
+
     private static ExamSession scheduled() {
         return ExamSession.schedule(1L, 5L, "Kiểm tra", START, END, ResultVisibility.SCORE, 10, "ABC123", NOW);
     }

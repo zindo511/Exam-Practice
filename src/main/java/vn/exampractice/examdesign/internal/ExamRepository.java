@@ -41,6 +41,16 @@ interface ExamRepository extends JpaRepository<Exam, Long> {
     List<QuestionCount> countQuestions(@Param("examIds") Collection<Long> examIds);
 
     /**
+     * Trong các đề {@code examIds}, những đề dùng được: của giáo viên này, chưa lưu trữ, có ít nhất 1
+     * câu (cùng luật với {@link ExamDesignApiImpl}). Một truy vấn cho cả trang kỳ thi.
+     */
+    @Query("""
+            select e.id from Exam e
+            where e.id in :examIds and e.teacherId = :teacherId
+              and e.archivedAt is null and e.questions is not empty""")
+    List<Long> findUsableIds(@Param("examIds") Collection<Long> examIds, @Param("teacherId") Long teacherId);
+
+    /**
      * Tiêu đề các đề chưa lưu trữ đang chứa câu hỏi này, theo thứ tự chữ cái; dùng index
      * {@code ix_design_exam_question_question}. Rỗng nghĩa là câu không nằm trong đề nào đang dùng.
      */

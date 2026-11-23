@@ -66,6 +66,23 @@ class AttemptTest {
         expect(ExaminationErrorCode.ATTEMPT_EXPIRED, () -> attempt.submit(GRADING, deadline.plusSeconds(6)));
     }
 
+    /**
+     * Job chỉ chốt khi học sinh không còn ghi được nữa: mọi thời điểm học sinh còn nộp được thì job
+     * chưa được chốt, và ngược lại (ADR-0013).
+     */
+    @Test
+    void job_may_expire_only_after_the_grace_period_ends() {
+        Attempt attempt = Attempt.start(5L, 9L, 45, SESSION_END, NOW);
+        Instant deadline = attempt.getDeadline();
+
+        assertThat(attempt.isOverdue(deadline)).isFalse();
+        assertThat(attempt.isOverdue(deadline.plusSeconds(5))).isFalse();
+        assertThat(attempt.isOverdue(deadline.plusSeconds(5).plusMillis(1))).isTrue();
+
+        attempt.submit(GRADING, deadline.plusSeconds(5));
+        assertThat(attempt.isOverdue(deadline.plusSeconds(60))).as("bài đã nộp").isFalse();
+    }
+
     @Test
     void submit_grades_on_the_session_scale() {
         Attempt attempt = Attempt.start(5L, 9L, 45, SESSION_END, NOW);

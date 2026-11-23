@@ -8,7 +8,7 @@ import vn.exampractice.shared.error.BusinessException;
 import vn.exampractice.shared.error.CommonErrorCode;
 
 /**
- * Học sinh làm bài: bắt đầu, xem lại, lưu đáp án, nộp (state-machines.md mục 2).
+ * Học sinh làm bài: bắt đầu, xem lại, lưu đáp án, nộp (state-machines.md mục 2); và job chốt bài hết giờ.
  *
  * <p>Mọi hàm nhận {@code studentId} của người gọi (ADR-0015); bài làm của người khác báo
  * {@code ATTEMPT_NOT_FOUND}. Luật trạng thái và hạn chót nằm trong {@link Attempt}.
@@ -91,6 +91,25 @@ class AttemptService {
             attempt.submit(session.grading(), now);
             return AttemptResponse.of(attempt, session, now);
         });
+    }
+
+    /**
+     * Job chốt một bài đã quá hạn chót cộng ân hạn: {@code EXPIRED}, chấm từ đáp án đã lưu, ghi nhận
+     * kết thúc lúc hạn chót (ADR-0013). Kiểm tra lại trên dữ liệu vừa tải, vì học sinh hoặc giáo viên có
+     * thể đã kết thúc bài sau khi job lấy danh sách.
+     *
+     * <p>Không thử lại khi xung đột: bên kia đã ghi trước thì lượt sau của job tự thấy bài không còn cần chốt.
+     *
+     * @return {@code true} nếu bài được chốt
+     */
+    @Transactional
+    boolean expireOverdue(Long attemptId, Instant now) {
+        Attempt attempt = attemptRepository.findById(attemptId).orElse(null);
+        if (attempt == null || !attempt.isOverdue(now)) {
+            return false;
+        }
+        attempt.expire(sessionOf(attempt).grading(), attempt.getDeadline());
+        return true;
     }
 
     private Attempt findForWrite(Long studentId, Long attemptId) {

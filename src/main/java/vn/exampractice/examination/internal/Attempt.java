@@ -149,6 +149,14 @@ class Attempt {
     }
 
     /**
+     * Job được chốt bài chưa: còn đang làm và đã quá hạn chót cộng ân hạn. Chờ hết ân hạn để job không
+     * giành mất lần nộp sát giờ mà {@link #ensureAcceptingWrites} vẫn còn nhận (ADR-0013).
+     */
+    boolean isOverdue(Instant now) {
+        return status == AttemptStatus.IN_PROGRESS && Objects.requireNonNull(now, "now").isAfter(deadline.plus(GRACE));
+    }
+
+    /**
      * Chốt bài còn đang làm khi hết giờ hoặc khi kỳ thi đóng; chấm từ các đáp án đã lưu.
      *
      * @param endedAt lúc ghi nhận bài kết thúc: hạn chót, hoặc lúc kỳ thi đóng nếu sớm hơn

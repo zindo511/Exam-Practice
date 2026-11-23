@@ -129,7 +129,7 @@ Các dòng xếp theo thứ tự diễn ra của một kỳ thi:
 | Giáo viên | Học sinh |
 |---|---|
 | Tạo **kỳ thi** từ một đề, với giờ mở và giờ đóng, **thang điểm** (1–100, mặc định 10) và **học sinh được xem gì** sau khi thi; hệ thống sinh **mã tham gia** (6 ký tự) | Nhập mã để **tham gia** kỳ thi và vào phòng chờ |
-| **Mở kỳ thi**: hệ thống **chụp snapshot đề**, nên sửa đề gốc sau đó không ảnh hưởng bài đang thi | **Bắt đầu làm bài** khi kỳ thi đã mở; mỗi học sinh một lượt làm bài |
+| Kỳ thi **tự mở khi tới giờ mở** (giáo viên được mở sớm) và **tự đóng khi tới giờ đóng**; lúc mở hệ thống **chụp snapshot đề**, nên sửa đề gốc sau đó không ảnh hưởng bài đang thi. Kỳ thi đã lên lịch mà đề bị lưu trữ hoặc bị bỏ hết câu thì được **đánh dấu** để giáo viên sửa đề hoặc tạo lại trước giờ thi; tới giờ mở mà đề vẫn không dùng được thì kỳ thi **tự hủy** | **Bắt đầu làm bài** khi kỳ thi đã mở; mỗi học sinh một lượt làm bài |
 | Khóa không cho vào thêm khi lớp đã vào đủ | Đáp án được **tự động lưu** sau mỗi lần chọn |
 | | Đồng hồ đếm ngược theo **giờ server**: hạn chót = lúc bắt đầu + thời lượng, không vượt giờ đóng kỳ thi |
 | | **Nộp bài**, hoặc hệ thống **tự nộp khi hết giờ** |
@@ -138,7 +138,7 @@ Các dòng xếp theo thứ tự diễn ra của một kỳ thi:
 **Hệ thống tự đảm bảo:**
 - **Tự chấm** trắc nghiệm ngay khi nộp
 - Không cho sửa đáp án sau khi đã nộp, hết giờ hoặc bị khóa (ân hạn 5 giây cho độ trễ mạng sát giờ)
-- Bài chưa nộp khi hết giờ được **server tự chốt** (trạng thái `EXPIRED`) và chấm điểm từ đáp án đã lưu, kể cả khi học sinh đã đóng trình duyệt; giáo viên phân biệt được bài tự nộp và bài hết giờ
+- Bài chưa nộp khi hết giờ được **server tự chốt** (trạng thái `EXPIRED`, sau khi hết 5 giây ân hạn) và chấm điểm từ đáp án đã lưu, kể cả khi học sinh đã đóng trình duyệt; giáo viên phân biệt được bài tự nộp và bài hết giờ
 - Không bao giờ gửi đáp án đúng xuống trình duyệt khi học sinh đang làm bài
 - **Giới hạn nhập sai mã kỳ thi**: một tài khoản nhập sai quá 5 lần trong 15 phút thì bị tạm chặn nhập mã 15 phút, để chống dò mã
 

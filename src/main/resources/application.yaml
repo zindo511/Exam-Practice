@@ -35,3 +35,9 @@ app:
     # Để trống nếu thiếu biến, để JwtService báo rõ "chưa được cấu hình" và dừng khởi động.
     secret: ${JWT_SECRET:}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  examination:
+    job:
+      # Job mở kỳ thi, chốt bài hết giờ, đóng kỳ thi (ADR-0013). Test tắt job và tự gọi ExaminationJob.runOnce.
+      enabled: true
+      # Khoảng nghỉ giữa hai lượt chạy (ISO-8601)
+      interval: PT30S

@@ -105,6 +105,23 @@ class ExamDesignApiImplTest {
         }
     }
 
+    /** Cùng luật "dùng được" với hai hàm trên, cho nhiều đề trong một lần gọi. */
+    @Test
+    void usable_exam_ids_keep_only_usable_exams() {
+        Long q1 = question("Câu 1");
+        Exam usable = exam(TEACHER, q1);
+        Exam ofOtherTeacher = exam(8L, questionOf(8L));
+        Exam archived = exam(TEACHER, q1);
+        archived.archive(NOW);
+        Exam empty = exam(TEACHER);
+        entityManager.flush();
+
+        assertThat(api.findUsableExamIds(
+                List.of(usable.getId(), ofOtherTeacher.getId(), archived.getId(), empty.getId(), 999_999L), TEACHER))
+                .containsExactly(usable.getId());
+        assertThat(api.findUsableExamIds(List.of(), TEACHER)).isEmpty();
+    }
+
     private Long question(String content) {
         return questionRepository.save(Question.create(TEACHER, content, List.of("A", "B"), 0, NOW)).getId();
     }

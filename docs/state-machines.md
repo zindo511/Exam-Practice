@@ -10,8 +10,7 @@ Thiết kế cơ sở dữ liệu tương ứng: [database.md](database.md).
 stateDiagram-v2
     [*] --> SCHEDULED : create()
     SCHEDULED --> OPEN : open()
-    SCHEDULED --> CANCELLED : cancel()
-    SCHEDULED --> CLOSED : quá giờ đóng mà chưa mở (job)
+    SCHEDULED --> CANCELLED : cancel() (giáo viên, hoặc job)
     OPEN --> CLOSED : close()
     CLOSED --> [*]
     CANCELLED --> [*]
@@ -21,15 +20,20 @@ stateDiagram-v2
 |---|---|---|---|---|
 | `create` | → `SCHEDULED` | Giáo viên | Đề tồn tại, chưa lưu trữ, có ít nhất 1 câu (hỏi `ExamDesignApi`); `start_at < end_at`; `end_at` ở tương lai | Lưu `exam_id`, sao chép tên đề; sinh `access_code`; `join_open = true` |
 | `open` | `SCHEDULED` → `OPEN` | Giáo viên bấm "Bắt đầu", hoặc job khi tới `start_at` | `now < end_at`; đề vẫn dùng được: tồn tại, chưa lưu trữ, có ít nhất 1 câu (hỏi `ExamDesignApi`) | Chụp snapshot câu hỏi và thời lượng ([ADR-0003](adr/0003-snapshot-de-khi-mo-ky-thi.md)); ghi `opened_at` |
-| `close` | `OPEN` → `CLOSED` | Job khi tới `end_at`, hoặc giáo viên kết thúc sớm | — | `join_open = false`; mọi bài `IN_PROGRESS` chuyển `EXPIRED` |
-| `cancel` | `SCHEDULED` → `CANCELLED` | Giáo viên | — | Mã tham gia hết hiệu lực |
-| (job) | `SCHEDULED` → `CLOSED` | Job khi quá `end_at` mà kỳ thi chưa được mở | — | Không có bài làm nào |
+| `close` | `OPEN` → `CLOSED` | Job khi quá `end_at` + 5 giây ân hạn, hoặc giáo viên kết thúc sớm | — | `join_open = false`; mọi bài `IN_PROGRESS` chuyển `EXPIRED`; job ghi `closed_at = end_at` |
+| `cancel` | `SCHEDULED` → `CANCELLED` | Giáo viên bất cứ lúc nào trước khi mở; hoặc job khi tới `start_at` mà đề không còn dùng được, hay khi quá `end_at` mà kỳ thi chưa từng mở | — | Mã tham gia hết hiệu lực; không có bài làm nào |
 | `lockJoin` / `unlockJoin` | không đổi | Giáo viên | `SCHEDULED` hoặc `OPEN` | Đổi `join_open` |
 | `changeResultVisibility` | không đổi | Giáo viên | Mọi trạng thái | Đổi những gì học sinh được xem sau khi bài kết thúc (`HIDDEN`, `SCORE`, `SCORE_AND_ANSWERS`); đáp án chỉ hiện khi kỳ thi đã `CLOSED` |
 
 Mã tham gia sinh một lần khi tạo và không đổi; mã bị lộ thì giáo viên khóa tham gia ([ADR-0010](adr/0010-tham-gia-bang-ma-ky-thi.md)).
 
-Nếu job không mở được kỳ thi khi tới giờ (ví dụ đề đã bị lưu trữ hoặc bị bỏ hết câu), kỳ thi giữ `SCHEDULED` và giáo viên thấy lỗi khi bấm mở thủ công. Danh sách kỳ thi của giáo viên nên đánh dấu các kỳ thi `SCHEDULED` có đề không còn dùng được, để giáo viên hủy và tạo kỳ thi khác trước giờ thi.
+**Đề không còn dùng được** (giáo viên lưu trữ đề hoặc bỏ hết câu sau khi lên lịch kỳ thi):
+1. **Trước `start_at`:** job không đụng tới kỳ thi. Response kỳ thi có `examUsable = false` để giáo viên biết và kịp sửa đề hoặc hủy, tạo kỳ thi khác. `examUsable` chỉ có ở kỳ thi `SCHEDULED`, tính lúc đọc (một lần hỏi `ExamDesignApi` cho cả trang danh sách); các trạng thái khác để rỗng. Giáo viên bấm mở thủ công thì thấy lỗi `EXAM_NOT_AVAILABLE`.
+2. **Tới `start_at`:** job thử mở; đề vẫn không dùng được thì **hủy kỳ thi** (`CANCELLED`), vì không có câu hỏi để chụp và kỳ thi không thể diễn ra.
+
+**Kỳ thi chưa từng mở thì không bao giờ thành `CLOSED`.** Nếu job không chạy suốt khoảng `start_at`–`end_at` (ví dụ ứng dụng tắt), lượt đầu tiên sau đó thấy kỳ thi đã quá giờ đóng mà vẫn `SCHEDULED`: kỳ thi không diễn ra nên bị hủy. Nếu ứng dụng chạy lại khi còn trong khoảng giờ thi thì job mở kỳ thi bình thường.
+
+Job chờ hết 5 giây ân hạn sau `end_at` mới đóng, vì `end_at` cũng là hạn chót muộn nhất của bài làm và học sinh còn được nộp trong ân hạn ([ADR-0013](adr/0013-xu-ly-het-gio-lam-bai.md)).
 
 **Thao tác được phép theo trạng thái:**
 
@@ -64,7 +68,7 @@ stateDiagram-v2
 | `extendTime` | giữ `IN_PROGRESS` | Giáo viên | `now ≤ deadline`; số phút > 0 | `deadline` cộng thêm số phút |
 | `submit` | → `SUBMITTED` | Học sinh | `now ≤ deadline + 5 giây` | Chấm điểm; `submitted_at = now` |
 | `forceSubmit` | → `SUBMITTED` | Giáo viên | — | Chấm điểm; `submitted_at = now` |
-| `expire` | → `EXPIRED` | Job, hoặc khi kỳ thi đóng | Quá hạn chót, hoặc kỳ thi đóng sớm | Chấm điểm; `submitted_at = deadline` (hoặc lúc đóng) |
+| `expire` | → `EXPIRED` | Job, hoặc khi kỳ thi đóng | Job: quá hạn chót + 5 giây ân hạn; hoặc kỳ thi đóng | Chấm điểm; `submitted_at = deadline` (hoặc lúc đóng nếu sớm hơn) |
 | `lock` | → `LOCKED` | Giáo viên | — | Chấm điểm; `submitted_at = now`; bài được đánh dấu để giáo viên xem xét |
 
 - Cả ba trạng thái kết thúc đều **có điểm**, tính từ các đáp án đã lưu. Trạng thái cho biết bài kết thúc bằng cách nào.

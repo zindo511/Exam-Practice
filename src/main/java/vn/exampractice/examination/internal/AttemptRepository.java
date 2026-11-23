@@ -1,10 +1,12 @@
 package vn.exampractice.examination.internal;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -33,4 +35,15 @@ interface AttemptRepository extends JpaRepository<Attempt, Long> {
 
     /** Bài làm của một học sinh trong nhiều kỳ thi, cho một trang "Kỳ thi của tôi" (một truy vấn). */
     List<Attempt> findByStudentIdAndSessionIdIn(Long studentId, Collection<Long> sessionIds);
+
+    /**
+     * Bài job cần chốt: còn đang làm, hạn chót trước {@code cutoff}. Chỉ trả ID; mỗi bài được chốt
+     * trong transaction riêng (ADR-0013). Dùng partial index {@code ix_exam_attempt_in_progress_deadline}.
+     */
+    @Query("""
+            select a.id from Attempt a
+            where a.status = vn.exampractice.examination.internal.AttemptStatus.IN_PROGRESS
+              and a.deadline < :cutoff
+            order by a.deadline, a.id""")
+    List<Long> findIdsOverdue(@Param("cutoff") Instant cutoff, Limit limit);
 }

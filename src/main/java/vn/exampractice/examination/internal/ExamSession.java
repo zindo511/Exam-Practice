@@ -27,7 +27,8 @@ import vn.exampractice.shared.error.BusinessException;
 
 /**
  * Kỳ thi trong bảng {@code exam_session} (database.md mục 5), vòng đời theo state-machines.md mục 1:
- * {@code SCHEDULED → OPEN → CLOSED}, hoặc {@code SCHEDULED → CANCELLED}.
+ * {@code SCHEDULED → OPEN → CLOSED}, hoặc {@code SCHEDULED → CANCELLED}. Kỳ thi chưa từng mở không bao
+ * giờ thành {@code CLOSED}.
  *
  * <p>Mỗi thao tác là một hàm hành vi kiểm tra trạng thái trước khi đổi; sai trạng thái báo
  * {@code INVALID_SESSION_STATE} (409).
@@ -203,7 +204,10 @@ class ExamSession {
         this.closedAt = Objects.requireNonNull(now, "now");
     }
 
-    /** Hủy kỳ thi chưa mở; mã tham gia hết hiệu lực. */
+    /**
+     * Hủy kỳ thi chưa mở; mã tham gia hết hiệu lực. Giáo viên hủy, hoặc job hủy khi tới giờ mở mà đề
+     * không còn dùng được, hay khi quá giờ đóng mà kỳ thi chưa từng mở (state-machines.md mục 1).
+     */
     void cancel() {
         requireStatus(Set.of(SessionStatus.SCHEDULED), "hủy");
         this.status = SessionStatus.CANCELLED;
@@ -226,6 +230,23 @@ class ExamSession {
      */
     void changeResultVisibility(ResultVisibility visibility) {
         this.resultVisibility = Objects.requireNonNull(visibility, "visibility");
+    }
+
+    /** Job cần mở kỳ thi chưa: đang chờ, đã tới giờ mở và chưa tới giờ đóng. */
+    boolean isDueToOpen(Instant now) {
+        Objects.requireNonNull(now, "now");
+        return status == SessionStatus.SCHEDULED && !now.isBefore(startAt) && now.isBefore(endAt);
+    }
+
+    /**
+     * Job cần xử lý kỳ thi quá giờ đóng chưa: đang mở (để đóng) hoặc chưa từng mở (để hủy), và đã quá
+     * giờ đóng cộng ân hạn của bài làm.
+     * Bài làm có hạn chót muộn nhất bằng giờ đóng, nên phải chờ hết ân hạn để không chặn lần nộp sát giờ
+     * mà bài làm vẫn còn nhận (ADR-0013).
+     */
+    boolean isDueToClose(Instant now) {
+        return (status == SessionStatus.SCHEDULED || status == SessionStatus.OPEN)
+                && Objects.requireNonNull(now, "now").isAfter(endAt.plus(Attempt.GRACE));
     }
 
     boolean isOwnedBy(Long teacherId) {

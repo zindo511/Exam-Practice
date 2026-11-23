@@ -212,10 +212,10 @@ Các cột dưới đây chỉ lưu ID, không có foreign key. Module sở hữ
 | `design_question` | `(teacher_id, created_at)` | Danh sách câu hỏi của giáo viên, phân trang |
 | `design_exam` | `(teacher_id, created_at)` | Danh sách đề của giáo viên |
 | `design_exam_question` | `PK (exam_id, position)`, `UNIQUE (exam_id, question_id)`, `(question_id)` | Câu hỏi của đề; kiểm tra câu hỏi có đang nằm trong đề nào không |
-| `exam_session` | `UNIQUE (access_code)`, `(teacher_id, start_at)`, `(status, start_at)`, `(status, end_at)` | Nhập mã; danh sách kỳ thi; job mở và đóng kỳ thi |
+| `exam_session` | `UNIQUE (access_code)`, `(teacher_id, start_at)`, `(start_at) WHERE status = 'SCHEDULED'`, `(end_at) WHERE status IN ('SCHEDULED', 'OPEN')` | Nhập mã; danh sách kỳ thi; job mở và đóng kỳ thi |
 | `exam_session_question` | `UNIQUE (session_id, position)` | Đề của kỳ thi |
 | `exam_participant` | `UNIQUE (session_id, student_id)` | Tham gia một lần; danh sách thí sinh |
-| `exam_attempt` | `UNIQUE (session_id, student_id)`, `(status, deadline)`, `(student_id)` | Một bài mỗi kỳ thi; job chốt bài hết giờ; lịch sử của học sinh |
+| `exam_attempt` | `UNIQUE (session_id, student_id)`, `(deadline) WHERE status = 'IN_PROGRESS'`, `(student_id)` | Một bài mỗi kỳ thi; job chốt bài hết giờ; lịch sử của học sinh |
 | `exam_answer` | `UNIQUE (attempt_id, session_question_id)` | Mỗi câu một đáp án |
 | `exam_join_failure` | `(student_id, failed_at)` | Đếm số lần nhập sai gần đây |
 | `proctor_presence` | `PK (attempt_id)`, `(session_id)` | Heartbeat; màn hình giám sát |

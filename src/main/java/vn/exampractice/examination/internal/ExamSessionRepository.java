@@ -1,7 +1,10 @@
 package vn.exampractice.examination.internal;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,4 +36,27 @@ interface ExamSessionRepository extends JpaRepository<ExamSession, Long> {
             select s from ExamSession s
             where s.id in (select p.sessionId from SessionParticipant p where p.studentId = :studentId)""")
     Page<ExamSession> findJoinedBy(@Param("studentId") Long studentId, Pageable pageable);
+
+    /**
+     * Kỳ thi job cần mở: đã tới giờ mở, chưa tới giờ đóng. Chỉ trả ID; mỗi kỳ thi được xử lý trong
+     * transaction riêng (ADR-0013). Dùng partial index {@code ix_exam_session_scheduled_start}.
+     */
+    @Query("""
+            select s.id from ExamSession s
+            where s.status = vn.exampractice.examination.internal.SessionStatus.SCHEDULED
+              and s.startAt <= :now and s.endAt > :now
+            order by s.startAt, s.id""")
+    List<Long> findIdsDueToOpen(@Param("now") Instant now, Limit limit);
+
+    /**
+     * Kỳ thi job cần đóng (đang mở) hoặc hủy (chưa từng mở), có giờ đóng trước {@code cutoff}. Dùng partial
+     * index {@code ix_exam_session_active_end}.
+     */
+    @Query("""
+            select s.id from ExamSession s
+            where s.status in (vn.exampractice.examination.internal.SessionStatus.SCHEDULED,
+                               vn.exampractice.examination.internal.SessionStatus.OPEN)
+              and s.endAt < :cutoff
+            order by s.endAt, s.id""")
+    List<Long> findIdsDueToClose(@Param("cutoff") Instant cutoff, Limit limit);
 }
