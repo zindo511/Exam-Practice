@@ -75,6 +75,8 @@ class ExamSessionControllerTest {
                 .andExpect(jsonPath("$.joinOpen").value(true))
                 .andExpect(jsonPath("$.accessCode", matchesPattern("^[A-Z0-9]{6}$")))
                 .andExpect(jsonPath("$.durationMinutes", nullValue()))
+                .andExpect(jsonPath("$.resultVisibility").value("SCORE"))
+                .andExpect(jsonPath("$.maxScore").value(10))
                 .andReturn().getResponse();
 
         long id = json(response.getContentAsString()).get("id").asLong();
@@ -90,6 +92,49 @@ class ExamSessionControllerTest {
                 .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
                 .andExpect(jsonPath("$.errors[*].field", hasItem("endAt")))
                 .andExpect(jsonPath("$.errors[*].field", hasItem("startBeforeEnd")));
+    }
+
+    @Test
+    void create_with_chosen_result_settings() throws Exception {
+        Map<String, Object> body = sessionBody(usableExam(TEACHER_ID, "Đề"), hoursFromNow(1), hoursFromNow(3));
+        body.put("resultVisibility", "HIDDEN");
+        body.put("maxScore", 20);
+
+        perform(post(URL), teacher(TEACHER_ID), body)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.resultVisibility").value("HIDDEN"))
+                .andExpect(jsonPath("$.maxScore").value(20));
+    }
+
+    @Test
+    void invalid_result_settings_are_rejected_per_field() throws Exception {
+        long exam = usableExam(TEACHER_ID, "Đề");
+        for (int maxScore : new int[] {0, 101}) {
+            Map<String, Object> body = sessionBody(exam, hoursFromNow(1), hoursFromNow(3));
+            body.put("maxScore", maxScore);
+            perform(post(URL), teacher(TEACHER_ID), body)
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.errors[0].field").value("maxScore"));
+        }
+
+        Map<String, Object> missingVisibility = sessionBody(exam, hoursFromNow(1), hoursFromNow(3));
+        missingVisibility.remove("resultVisibility");
+        perform(post(URL), teacher(TEACHER_ID), missingVisibility)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].field").value("resultVisibility"));
+    }
+
+    /** Ẩn điểm trong lúc thi, công bố sau khi kỳ thi đóng. */
+    @Test
+    void result_visibility_can_be_changed_after_close() throws Exception {
+        long session = createSession(usableExam(TEACHER_ID, "Đề"));
+        perform(post(URL + "/" + session + "/open"), teacher(TEACHER_ID), null).andExpect(status().isOk());
+        perform(post(URL + "/" + session + "/close"), teacher(TEACHER_ID), null).andExpect(status().isOk());
+
+        perform(put(URL + "/" + session + "/result-visibility"), teacher(TEACHER_ID),
+                Map.of("resultVisibility", "SCORE_AND_ANSWERS"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultVisibility").value("SCORE_AND_ANSWERS"));
     }
 
     @Test
@@ -289,6 +334,7 @@ class ExamSessionControllerTest {
         body.put("examId", examId);
         body.put("startAt", startAt.toString());
         body.put("endAt", endAt.toString());
+        body.put("resultVisibility", "SCORE");
         return body;
     }
 

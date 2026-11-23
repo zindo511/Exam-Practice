@@ -1,6 +1,6 @@
 # ADR-0013: Xử lý hết giờ làm bài
 
-- **Trạng thái:** Đã chấp nhận
+- **Trạng thái:** Đã chấp nhận; phần optimistic locking được bổ sung bởi [ADR-0017](0017-thu-lai-khi-xung-dot-optimistic-locking.md)
 - **Ngày:** 2026-11-15
 
 ## Bối cảnh
@@ -19,7 +19,7 @@ Cần đảm bảo:
 **Ba lớp xử lý:**
 
 1. **Entity tự chặn (bắt buộc).** Mọi thao tác ghi lên `Attempt` (lưu đáp án, nộp bài, cộng giờ) gọi `ensureInProgress(now)`: bài phải đang `IN_PROGRESS` và `now` chưa quá `deadline`. Vi phạm thì ném `ATTEMPT_ALREADY_SUBMITTED` hoặc `ATTEMPT_EXPIRED`. `now` luôn là giờ server.
-2. **Job định kỳ trên server tự chốt bài (bắt buộc).** `@Scheduled` trong `examination`, khoảng 30 giây một lần: tìm bài `IN_PROGRESS` đã quá hạn chót, gọi `attempt.expire(...)`: chuyển sang `EXPIRED`, chấm điểm từ đáp án đã lưu, `submittedAt = deadline`. Cùng job chuyển kỳ thi quá giờ đóng sang `CLOSED`.
+2. **Job định kỳ trên server tự chốt bài (bắt buộc).** `@Scheduled` trong `examination`, khoảng 30 giây một lần: tìm bài `IN_PROGRESS` đã quá hạn chót **cộng ân hạn**, gọi `attempt.expire(...)`: chuyển sang `EXPIRED`, chấm điểm từ đáp án đã lưu, `submittedAt = deadline`. Cùng job mở kỳ thi tới giờ mở và chuyển kỳ thi đang mở quá giờ đóng (cũng cộng ân hạn) sang `CLOSED`. Kỳ thi tới giờ mở mà đề không còn dùng được, hoặc quá giờ đóng mà chưa từng mở, thì bị hủy (`CANCELLED`), xem state-machines.md mục 1.
 3. **Trình duyệt tự nộp khi đồng hồ về 0 (trải nghiệm).** Học sinh thấy ngay màn hình đã nộp. Server không dựa vào lớp này.
 
 **Trạng thái:**
@@ -36,6 +36,9 @@ Cả hai đều được chấm điểm; giáo viên phân biệt được bài 
 - **Ân hạn 5 giây** phía server cho lưu đáp án và nộp bài, bù độ trễ mạng sát giờ. Không bao giờ dùng giờ do trình duyệt gửi lên.
 - **Optimistic locking:** `Attempt` có cột `@Version`. Khi học sinh nộp đúng lúc job đang chốt, thao tác đến sau bị từ chối; `GlobalExceptionHandler` chuyển lỗi này thành `CONCURRENT_MODIFICATION` (`409`).
 - **Job chỉ xử lý từng bài một, mỗi bài một transaction nhỏ**, để một bài lỗi không làm hỏng cả lượt.
+- **Job chờ hết ân hạn mới chốt bài và đóng kỳ thi.** Học sinh còn được nộp tới `deadline + 5 giây`; nếu job chốt ngay tại `deadline`, trong 5 giây đó cả hai cùng được ghi và một lần nộp hợp lệ có thể bị biến thành `EXPIRED`. Chờ hết ân hạn thì lúc job chạy, entity đã tự chặn học sinh. Điểm và `submittedAt` vẫn tính theo `deadline`, học sinh không được thêm giờ. Giờ đóng kỳ thi cũng là hạn chót muộn nhất của bài làm, nên đóng kỳ thi cũng chờ như vậy.
+- **Job không thử lại khi xung đột optimistic locking** (khác thao tác của người dùng, [ADR-0017](0017-thu-lai-khi-xung-dot-optimistic-locking.md)): bên kia đã ghi trước, lượt sau job tự thấy mục đó không còn cần xử lý.
+- **Tắt được bằng `app.examination.job.enabled=false`** (test tắt job và gọi thẳng `ExaminationJob.runOnce` với giờ tự chọn). Khoảng nghỉ đặt bằng `app.examination.job.interval`.
 
 ## Phương án đã cân nhắc
 
@@ -49,5 +52,5 @@ Cả hai đều được chấm điểm; giáo viên phân biệt được bài 
 - (+) Mọi bài đều được chốt và chấm, không phụ thuộc vào việc học sinh còn kết nối.
 - (+) Không thể ghi đáp án sau giờ, kể cả khi job chưa kịp chạy.
 - (+) Không chấm trùng nhờ kiểm tra trạng thái và `@Version`.
-- (−) Bài hết giờ có thể nằm ở `IN_PROGRESS` thêm tối đa khoảng 30 giây trước khi được chốt. Màn hình giám sát tính "còn lại 0 phút" từ hạn chót nên vẫn hiển thị đúng.
+- (−) Bài hết giờ có thể nằm ở `IN_PROGRESS` thêm tối đa khoảng 35 giây (ân hạn cộng một lượt job) trước khi được chốt. Màn hình giám sát tính "còn lại 0 phút" từ hạn chót nên vẫn hiển thị đúng.
 - (−) Khi chạy nhiều instance, mỗi instance đều chạy job. Kiểm tra trạng thái và `@Version` đã chặn chấm trùng; nếu cần tránh việc chạy thừa, thêm ShedLock.

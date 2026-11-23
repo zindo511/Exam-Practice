@@ -4,7 +4,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -25,7 +27,8 @@ import vn.exampractice.shared.error.BusinessException;
 
 /**
  * Kỳ thi trong bảng {@code exam_session} (database.md mục 5), vòng đời theo state-machines.md mục 1:
- * {@code SCHEDULED → OPEN → CLOSED}, hoặc {@code SCHEDULED → CANCELLED}.
+ * {@code SCHEDULED → OPEN → CLOSED}, hoặc {@code SCHEDULED → CANCELLED}. Kỳ thi chưa từng mở không bao
+ * giờ thành {@code CLOSED}.
  *
  * <p>Mỗi thao tác là một hàm hành vi kiểm tra trạng thái trước khi đổi; sai trạng thái báo
  * {@code INVALID_SESSION_STATE} (409).
@@ -42,6 +45,9 @@ class ExamSession {
 
     static final int ACCESS_CODE_LENGTH = 6;
     static final int MAX_TITLE_LENGTH = 200;
+    static final int MIN_MAX_SCORE = 1;
+    static final int MAX_MAX_SCORE = 100;
+    static final int DEFAULT_MAX_SCORE = 10;
 
     /** Một câu trong snapshot đề, đã chuyển từ DTO của examdesign sang kiểu của examination. */
     record SnapshotQuestion(int position, Long sourceQuestionId, String content, List<String> options,
@@ -84,6 +90,15 @@ class ExamSession {
     @Column(nullable = false, length = 20)
     private SessionStatus status;
 
+    /** Học sinh được xem gì sau khi bài kết thúc; đổi được bất cứ lúc nào. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "result_visibility", nullable = false, length = 20)
+    private ResultVisibility resultVisibility;
+
+    /** Thang điểm: điểm bài = số câu đúng / tổng số câu × maxScore (ADR-0016). Cố định từ lúc tạo. */
+    @Column(name = "max_score", nullable = false, updatable = false)
+    private int maxScore;
+
     @Column(name = "opened_at")
     private Instant openedAt;
 
@@ -116,10 +131,11 @@ class ExamSession {
      * Lên lịch kỳ thi mới ở trạng thái {@code SCHEDULED}, cho phép tham gia ngay. Việc đề có dùng
      * được không do service hỏi {@code ExamDesignApi} trước khi gọi hàm này.
      *
-     * @param title tiêu đề đề tại thời điểm tạo
+     * @param title    tiêu đề đề tại thời điểm tạo
+     * @param maxScore thang điểm, từ {@value #MIN_MAX_SCORE} tới {@value #MAX_MAX_SCORE}
      */
     static ExamSession schedule(Long teacherId, Long examId, String title, Instant startAt, Instant endAt,
-                                String accessCode, Instant now) {
+                                ResultVisibility resultVisibility, int maxScore, String accessCode, Instant now) {
         Objects.requireNonNull(teacherId, "teacherId");
         Objects.requireNonNull(examId, "examId");
         Objects.requireNonNull(now, "now");
@@ -134,7 +150,12 @@ class ExamSession {
         if (title == null || title.isBlank() || title.length() > MAX_TITLE_LENGTH) {
             throw new IllegalArgumentException("title must not be blank and at most " + MAX_TITLE_LENGTH + " characters");
         }
+        if (maxScore < MIN_MAX_SCORE || maxScore > MAX_MAX_SCORE) {
+            throw new IllegalArgumentException("maxScore must be between " + MIN_MAX_SCORE + " and " + MAX_MAX_SCORE);
+        }
         ExamSession session = new ExamSession(teacherId, examId, now);
+        session.resultVisibility = Objects.requireNonNull(resultVisibility, "resultVisibility");
+        session.maxScore = maxScore;
         session.title = title;
         session.startAt = startAt;
         session.endAt = endAt;
@@ -183,7 +204,10 @@ class ExamSession {
         this.closedAt = Objects.requireNonNull(now, "now");
     }
 
-    /** Hủy kỳ thi chưa mở; mã tham gia hết hiệu lực. */
+    /**
+     * Hủy kỳ thi chưa mở; mã tham gia hết hiệu lực. Giáo viên hủy, hoặc job hủy khi tới giờ mở mà đề
+     * không còn dùng được, hay khi quá giờ đóng mà kỳ thi chưa từng mở (state-machines.md mục 1).
+     */
     void cancel() {
         requireStatus(Set.of(SessionStatus.SCHEDULED), "hủy");
         this.status = SessionStatus.CANCELLED;
@@ -200,8 +224,65 @@ class ExamSession {
         this.joinOpen = true;
     }
 
+    /**
+     * Đổi những gì học sinh được xem sau khi bài kết thúc. Được đổi ở mọi trạng thái, kể cả sau khi
+     * kỳ thi đóng, để giáo viên công bố điểm sau khi xem xét.
+     */
+    void changeResultVisibility(ResultVisibility visibility) {
+        this.resultVisibility = Objects.requireNonNull(visibility, "visibility");
+    }
+
+    /** Job cần mở kỳ thi chưa: đang chờ, đã tới giờ mở và chưa tới giờ đóng. */
+    boolean isDueToOpen(Instant now) {
+        Objects.requireNonNull(now, "now");
+        return status == SessionStatus.SCHEDULED && !now.isBefore(startAt) && now.isBefore(endAt);
+    }
+
+    /**
+     * Job cần xử lý kỳ thi quá giờ đóng chưa: đang mở (để đóng) hoặc chưa từng mở (để hủy), và đã quá
+     * giờ đóng cộng ân hạn của bài làm.
+     * Bài làm có hạn chót muộn nhất bằng giờ đóng, nên phải chờ hết ân hạn để không chặn lần nộp sát giờ
+     * mà bài làm vẫn còn nhận (ADR-0013).
+     */
+    boolean isDueToClose(Instant now) {
+        return (status == SessionStatus.SCHEDULED || status == SessionStatus.OPEN)
+                && Objects.requireNonNull(now, "now").isAfter(endAt.plus(Attempt.GRACE));
+    }
+
     boolean isOwnedBy(Long teacherId) {
         return this.teacherId.equals(teacherId);
+    }
+
+    /**
+     * Học sinh bắt đầu làm bài được không: kỳ thi đang mở và chưa tới giờ đóng. Job có thể chậm vài
+     * giây mới chuyển kỳ thi quá giờ sang {@code CLOSED}, nên kiểm tra cả giờ.
+     */
+    void ensureAcceptsAttempts(Instant now) {
+        if (status != SessionStatus.OPEN || !Objects.requireNonNull(now, "now").isBefore(endAt)) {
+            throw new BusinessException(ExaminationErrorCode.SESSION_NOT_OPEN);
+        }
+    }
+
+    /** Câu trong bản chụp đề theo ID; rỗng nếu không thuộc kỳ thi này. */
+    Optional<SessionQuestion> question(Long sessionQuestionId) {
+        return questions.stream().filter(q -> q.getId().equals(sessionQuestionId)).findFirst();
+    }
+
+    /** Cách chấm bài của kỳ thi: đáp án đúng trong bản chụp đề và thang điểm (ADR-0016). */
+    Grading grading() {
+        if (questions.isEmpty()) {
+            throw new IllegalStateException("Session " + id + " has not been opened");
+        }
+        return new Grading(questions.stream()
+                .collect(Collectors.toMap(SessionQuestion::getId, SessionQuestion::getCorrectOption)), maxScore);
+    }
+
+    /**
+     * Còn nhận học sinh mới nhập mã không: kỳ thi chưa kết thúc ({@code SCHEDULED} hoặc
+     * {@code OPEN}) và giáo viên chưa khóa tham gia (state-machines.md mục 1, ADR-0010).
+     */
+    boolean acceptsJoin() {
+        return joinOpen && (status == SessionStatus.SCHEDULED || status == SessionStatus.OPEN);
     }
 
     private void requireStatus(Set<SessionStatus> allowed, String action) {
@@ -259,6 +340,14 @@ class ExamSession {
 
     SessionStatus getStatus() {
         return status;
+    }
+
+    ResultVisibility getResultVisibility() {
+        return resultVisibility;
+    }
+
+    int getMaxScore() {
+        return maxScore;
     }
 
     Instant getOpenedAt() {

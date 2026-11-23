@@ -119,7 +119,7 @@ Giáo viên soạn đề ─▶ mở kỳ thi (sinh mã) ─▶ học sinh nhậ
 - Tạo, sửa, xóa **câu hỏi trắc nghiệm** (nhiều lựa chọn, một đáp án đúng)
 - Tìm kiếm và phân trang ngân hàng câu hỏi của mình
 - Ghép câu hỏi thành **đề thi**: chọn câu, sắp thứ tự, đặt thời lượng làm bài (1–300 phút); tối đa 100 câu một đề
-- **Mỗi câu 1 điểm**, điểm bài quy về thang 10: số câu đúng / tổng số câu × 10, làm tròn 2 chữ số ([ADR-0016](docs/adr/0016-moi-cau-mot-diem-quy-ve-thang-10.md))
+- **Mỗi câu 1 điểm**; điểm bài quy về thang điểm giáo viên chọn khi tạo kỳ thi: số câu đúng / tổng số câu × thang điểm, làm tròn 2 chữ số ([ADR-0016](docs/adr/0016-moi-cau-mot-diem-quy-ve-thang-10.md))
 - Một đề có thể dùng lại cho nhiều kỳ thi
 
 ### 3.3. Tổ chức kỳ thi (`examination`)
@@ -128,17 +128,17 @@ Các dòng xếp theo thứ tự diễn ra của một kỳ thi:
 
 | Giáo viên | Học sinh |
 |---|---|
-| Tạo **kỳ thi** từ một đề, với giờ mở và giờ đóng; hệ thống sinh **mã tham gia** (6 ký tự) | Nhập mã để **tham gia** kỳ thi và vào phòng chờ |
-| **Mở kỳ thi**: hệ thống **chụp snapshot đề**, nên sửa đề gốc sau đó không ảnh hưởng bài đang thi | **Bắt đầu làm bài** khi kỳ thi đã mở; mỗi học sinh một lượt làm bài |
+| Tạo **kỳ thi** từ một đề, với giờ mở và giờ đóng, **thang điểm** (1–100, mặc định 10) và **học sinh được xem gì** sau khi thi; hệ thống sinh **mã tham gia** (6 ký tự) | Nhập mã để **tham gia** kỳ thi và vào phòng chờ |
+| Kỳ thi **tự mở khi tới giờ mở** (giáo viên được mở sớm) và **tự đóng khi tới giờ đóng**; lúc mở hệ thống **chụp snapshot đề**, nên sửa đề gốc sau đó không ảnh hưởng bài đang thi. Kỳ thi đã lên lịch mà đề bị lưu trữ hoặc bị bỏ hết câu thì được **đánh dấu** để giáo viên sửa đề hoặc tạo lại trước giờ thi; tới giờ mở mà đề vẫn không dùng được thì kỳ thi **tự hủy** | **Bắt đầu làm bài** khi kỳ thi đã mở; mỗi học sinh một lượt làm bài |
 | Khóa không cho vào thêm khi lớp đã vào đủ | Đáp án được **tự động lưu** sau mỗi lần chọn |
 | | Đồng hồ đếm ngược theo **giờ server**: hạn chót = lúc bắt đầu + thời lượng, không vượt giờ đóng kỳ thi |
 | | **Nộp bài**, hoặc hệ thống **tự nộp khi hết giờ** |
-| Xem kết quả và điểm của từng học sinh | Xem điểm sau khi nộp |
+| Xem kết quả và điểm của từng học sinh; đổi cài đặt xem kết quả bất cứ lúc nào (ví dụ công bố điểm sau khi thi) | Tùy cài đặt của kỳ thi: không thấy điểm, thấy điểm ngay khi bài kết thúc, hoặc thấy điểm và **đáp án sau khi kỳ thi đóng** |
 
 **Hệ thống tự đảm bảo:**
 - **Tự chấm** trắc nghiệm ngay khi nộp
 - Không cho sửa đáp án sau khi đã nộp, hết giờ hoặc bị khóa (ân hạn 5 giây cho độ trễ mạng sát giờ)
-- Bài chưa nộp khi hết giờ được **server tự chốt** (trạng thái `EXPIRED`) và chấm điểm từ đáp án đã lưu, kể cả khi học sinh đã đóng trình duyệt; giáo viên phân biệt được bài tự nộp và bài hết giờ
+- Bài chưa nộp khi hết giờ được **server tự chốt** (trạng thái `EXPIRED`, sau khi hết 5 giây ân hạn) và chấm điểm từ đáp án đã lưu, kể cả khi học sinh đã đóng trình duyệt; giáo viên phân biệt được bài tự nộp và bài hết giờ
 - Không bao giờ gửi đáp án đúng xuống trình duyệt khi học sinh đang làm bài
 - **Giới hạn nhập sai mã kỳ thi**: một tài khoản nhập sai quá 5 lần trong 15 phút thì bị tạm chặn nhập mã 15 phút, để chống dò mã
 
@@ -268,7 +268,7 @@ Cột **Đảm bảo bởi** cho biết ràng buộc được kiểm tra ở đ�
 | 9 | Schema chỉ thay đổi qua migration Flyway | Runtime (Hibernate `validate`) | [0006](docs/adr/0006-flyway-va-du-lieu-theo-module.md) |
 | 10 | `shared` không phụ thuộc module nào và không chứa logic nghiệp vụ | ArchUnit (phụ thuộc) + review (logic nghiệp vụ) | [0004](docs/adr/0004-public-api-va-chieu-phu-thuoc.md) |
 | 11 | Không dùng Lombok, MapStruct | Test (thư viện không có trên classpath) | [0008](docs/adr/0008-khong-lombok-mapstruct.md) |
-| 12 | Hạn chót luôn tính theo giờ server; mọi thao tác ghi lên bài làm kiểm tra trạng thái và hạn chót trong entity; `Attempt` có `@Version` | Review | [0013](docs/adr/0013-xu-ly-het-gio-lam-bai.md) |
+| 12 | Hạn chót luôn tính theo giờ server; mọi thao tác ghi lên bài làm kiểm tra trạng thái và hạn chót trong entity; `Attempt` có `@Version`, mọi thao tác ghi tăng version và tự thử lại tối đa 3 lần khi xung đột | Review | [0013](docs/adr/0013-xu-ly-het-gio-lam-bai.md), [0017](docs/adr/0017-thu-lai-khi-xung-dot-optimistic-locking.md) |
 | 13 | Enum trong entity lưu dạng chuỗi (`@Enumerated(EnumType.STRING)`), không lưu số thứ tự | ArchUnit | — |
 | 14 | Controller không dùng repository trực tiếp; đi qua service | ArchUnit | — |
 

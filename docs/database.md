@@ -97,6 +97,8 @@ erDiagram
         timestamptz end_at
         int duration_minutes "chụp lúc mở, rỗng trước đó"
         varchar status "SCHEDULED, OPEN, CLOSED, CANCELLED"
+        varchar result_visibility "HIDDEN, SCORE, SCORE_AND_ANSWERS"
+        int max_score "thang điểm 1-100, cố định từ lúc tạo"
         timestamptz opened_at
         timestamptz closed_at
         timestamptz created_at
@@ -126,7 +128,7 @@ erDiagram
         timestamptz deadline
         timestamptz submitted_at "rỗng khi đang làm"
         int correct_count "số câu đúng, rỗng khi đang làm"
-        numeric score "thang 10, 2 chữ số thập phân, rỗng khi đang làm"
+        numeric score "theo max_score của kỳ thi, 2 chữ số thập phân, rỗng khi đang làm"
         bigint version
     }
     exam_answer {
@@ -153,7 +155,8 @@ erDiagram
 - **`exam_attempt`**: `UNIQUE (session_id, student_id)` đảm bảo mỗi học sinh một bài làm cho mỗi kỳ thi ngay ở tầng database. Khi cho làm nhiều lần sẽ đổi thành `UNIQUE (session_id, student_id, attempt_no)`.
 - **`deadline` lưu sẵn** trong từng bài làm, tính một lần lúc bắt đầu; cộng giờ chỉ sửa bài của một học sinh ([ADR-0013](adr/0013-xu-ly-het-gio-lam-bai.md)).
 - **`exam_answer`**: `UNIQUE (attempt_id, session_question_id)`, mỗi câu một đáp án; đổi đáp án là sửa dòng cũ. Là danh sách con của `Attempt`, không có repository riêng.
-- **`exam_join_failure`** ghi các lần nhập sai mã để giới hạn 5 lần trong 15 phút ([ADR-0010](adr/0010-tham-gia-bang-ma-ky-thi.md)). Dòng cũ hơn 15 phút có thể xóa định kỳ.
+- **`exam_participant`**: `UNIQUE (session_id, student_id)`, mỗi học sinh một dòng trong mỗi kỳ thi. Không phải danh sách con của `ExamSession` (số người tham gia lớn), nên có repository riêng.
+- **`exam_join_failure`** ghi các lần nhập sai mã để giới hạn 5 lần trong 15 phút ([ADR-0010](adr/0010-tham-gia-bang-ma-ky-thi.md)). Quyết định chặn cần đọc lại 30 phút gần nhất (15 phút đếm lần sai và 15 phút bị chặn), nên dòng cũ hơn 30 phút có thể xóa định kỳ.
 - **`version`** có ở `exam_session` (giáo viên và job cùng mở hoặc đóng kỳ thi) và `exam_attempt` (học sinh, giáo viên và job cùng ghi).
 
 ## 6. `proctoring`
@@ -209,10 +212,10 @@ Các cột dưới đây chỉ lưu ID, không có foreign key. Module sở hữ
 | `design_question` | `(teacher_id, created_at)` | Danh sách câu hỏi của giáo viên, phân trang |
 | `design_exam` | `(teacher_id, created_at)` | Danh sách đề của giáo viên |
 | `design_exam_question` | `PK (exam_id, position)`, `UNIQUE (exam_id, question_id)`, `(question_id)` | Câu hỏi của đề; kiểm tra câu hỏi có đang nằm trong đề nào không |
-| `exam_session` | `UNIQUE (access_code)`, `(teacher_id, start_at)`, `(status, start_at)`, `(status, end_at)` | Nhập mã; danh sách kỳ thi; job mở và đóng kỳ thi |
+| `exam_session` | `UNIQUE (access_code)`, `(teacher_id, start_at)`, `(start_at) WHERE status = 'SCHEDULED'`, `(end_at) WHERE status IN ('SCHEDULED', 'OPEN')` | Nhập mã; danh sách kỳ thi; job mở và đóng kỳ thi |
 | `exam_session_question` | `UNIQUE (session_id, position)` | Đề của kỳ thi |
 | `exam_participant` | `UNIQUE (session_id, student_id)` | Tham gia một lần; danh sách thí sinh |
-| `exam_attempt` | `UNIQUE (session_id, student_id)`, `(status, deadline)`, `(student_id)` | Một bài mỗi kỳ thi; job chốt bài hết giờ; lịch sử của học sinh |
+| `exam_attempt` | `UNIQUE (session_id, student_id)`, `(deadline) WHERE status = 'IN_PROGRESS'`, `(student_id)` | Một bài mỗi kỳ thi; job chốt bài hết giờ; lịch sử của học sinh |
 | `exam_answer` | `UNIQUE (attempt_id, session_question_id)` | Mỗi câu một đáp án |
 | `exam_join_failure` | `(student_id, failed_at)` | Đếm số lần nhập sai gần đây |
 | `proctor_presence` | `PK (attempt_id)`, `(session_id)` | Heartbeat; màn hình giám sát |

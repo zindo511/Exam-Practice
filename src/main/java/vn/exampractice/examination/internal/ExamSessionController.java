@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -77,6 +78,13 @@ class ExamSessionController {
     @PostMapping("/{id}/cancel")
     SessionResponse cancel(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id) {
         return sessionService.cancel(user.id(), id);
+    }
+
+    /** Đổi những gì học sinh được xem sau khi bài kết thúc, ví dụ công bố điểm sau khi kỳ thi đóng. */
+    @PutMapping("/{id}/result-visibility")
+    SessionResponse changeResultVisibility(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id,
+                                           @Valid @RequestBody ResultVisibilityRequest request) {
+        return sessionService.changeResultVisibility(user.id(), id, request.resultVisibility());
     }
 
     @PostMapping("/{id}/lock-join")

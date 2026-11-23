@@ -1,8 +1,10 @@
 package vn.exampractice.examdesign.internal;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,6 +41,14 @@ class ExamDesignApiImpl implements ExamDesignApi {
     @Override
     public Optional<ExamSnapshot> getExamSnapshot(Long examId, Long teacherId) {
         return findUsable(examId, teacherId).map(this::toSnapshot);
+    }
+
+    @Override
+    public Set<Long> findUsableExamIds(Collection<Long> examIds, Long teacherId) {
+        if (examIds.isEmpty()) {
+            return Set.of();
+        }
+        return Set.copyOf(examRepository.findUsableIds(examIds, teacherId));
     }
 
     /** Đề dùng được: của giáo viên này, chưa lưu trữ, có ít nhất 1 câu. */
