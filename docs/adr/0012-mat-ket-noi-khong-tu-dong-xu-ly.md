@@ -1,6 +1,6 @@
 # ADR-0012: Mất kết nối không tự động xử lý
 
-- **Trạng thái:** Đã chấp nhận
+- **Trạng thái:** Đã chấp nhận; phần hiển thị và ghi nhật ký mất kết nối bị thay thế bởi [ADR-0019](0019-mvp-khong-co-heartbeat.md)
 - **Ngày:** 2026-11-15
 
 ## Bối cảnh

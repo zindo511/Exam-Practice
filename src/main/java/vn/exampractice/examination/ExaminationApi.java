@@ -36,7 +36,7 @@ public interface ExaminationApi {
 
     /**
      * Bài làm {@code attemptId} có phải của học sinh {@code studentId} không, thuộc kỳ thi nào. Proctoring
-     * gọi ở heartbeat đầu tiên của một bài làm, để học sinh không gửi tín hiệu thay cho bài của người khác
+     * gọi mỗi khi nhận sự kiện từ trình duyệt học sinh, để học sinh không gửi tín hiệu thay cho bài của người khác
      * (ADR-0011).
      *
      * @return rỗng nếu bài làm không tồn tại hoặc của học sinh khác

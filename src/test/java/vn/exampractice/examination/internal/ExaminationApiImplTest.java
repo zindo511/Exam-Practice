@@ -92,6 +92,7 @@ class ExaminationApiImplTest {
         assertThat(aliceRow.deadline()).isEqualTo(attempt.getDeadline());
         AttemptSummary bobRow = result.attempts().get(1);
         assertThat(bobRow.status()).isEqualTo(AttemptState.NOT_STARTED);
+        assertThat(bobRow.sessionId()).isEqualTo(session.getId());
         assertThat(bobRow.attemptId()).isNull();
         assertThat(bobRow.answeredCount()).isZero();
     }
@@ -104,7 +105,7 @@ class ExaminationApiImplTest {
         assertThat(api.getSessionAttempts(session.getId(), teacherId + 1)).isEmpty();
     }
 
-    /** ADR-0011: học sinh không gửi heartbeat thay cho bài của người khác được. */
+    /** ADR-0011: học sinh không gửi sự kiện giám sát thay cho bài của người khác được. */
     @Test
     void attempt_of_student_is_found_only_for_its_owner() {
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
@@ -125,6 +126,7 @@ class ExaminationApiImplTest {
 
         AttemptSummary result = api.extendTime(teacherId, attempt.getId(), 10);
 
+        assertThat(result.sessionId()).isEqualTo(session.getId());
         assertThat(result.deadline()).isEqualTo(attempt.getDeadline().plus(Duration.ofMinutes(10)));
         assertThat(attemptRepository.findById(attempt.getId()).orElseThrow().getDeadline()).isEqualTo(result.deadline());
         assertThat(version(attempt.getId())).isGreaterThan(versionBefore);

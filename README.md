@@ -53,7 +53,7 @@ Hệ thống thi và luyện thi trực tuyến: **giáo viên** soạn đề, m
 | `identity` | Tài khoản, vai trò (STUDENT, TEACHER), đăng nhập |
 | `examdesign` | Soạn câu hỏi, ghép đề |
 | `examination` | Kỳ thi, tham gia bằng mã, lượt làm bài, tự chấm |
-| `proctoring` | Giám sát: heartbeat, sự kiện bất thường, bảng theo dõi |
+| `proctoring` | Giám sát: sự kiện bất thường, bảng theo dõi |
 
 Ranh giới giữa các module được kiểm tra tự động bởi `ModuleBoundaryTest` (ArchUnit).
 
@@ -77,7 +77,7 @@ Lý do của các quyết định kỹ thuật (bối cảnh, phương án đã 
 |---|---|
 | Giáo viên sửa đề trong lúc kỳ thi đang diễn ra | Chụp **snapshot đề** khi mở kỳ thi; sửa đề gốc chỉ áp dụng cho các kỳ thi sau |
 | Học sinh mất kết nối hoặc tải lại trang | Đáp án **tự động lưu** lên server; quay lại thì làm tiếp từ chỗ cũ |
-| Mất kết nối chưa chắc là gian lận | Hệ thống **chỉ hiển thị và ghi nhật ký**, không tự động xử lý; giáo viên quyết định cộng giờ hay khóa bài |
+| Mất kết nối chưa chắc là gian lận | Hệ thống **không tự động xử lý** (MVP chưa phát hiện mất kết nối); giáo viên quyết định cộng giờ hay khóa bài |
 | Học sinh chỉnh đồng hồ máy để kéo dài thời gian | Thời gian tính theo **giờ server**; hết giờ thì tự nộp |
 | Hết giờ nhưng học sinh không bấm nộp (đóng trình duyệt, mất mạng) | **Job trên server tự chốt bài** khoảng mỗi 30 giây và chấm điểm từ đáp án đã lưu; không phụ thuộc vào trình duyệt |
 | Đáp án đúng bị lộ qua API khi đang làm bài | Dữ liệu gửi xuống trình duyệt **không chứa đáp án đúng**; chỉ server chấm |
@@ -91,7 +91,7 @@ Lý do của các quyết định kỹ thuật (bối cảnh, phương án đã 
 |---|---|
 | Code các phần dính chặt vào nhau, sửa một chỗ hỏng chỗ khác | **Modular monolith**: 4 module chỉ giao tiếp qua Public Api; ranh giới kiểm tra tự động bằng ArchUnit |
 | Quan hệ JPA (`@ManyToOne`, `@OneToMany`) chạy query ngầm khi truy cập, dễ sinh lỗi **N+1 query** và buộc chặt các entity với nhau | **Flat ID Linking**: giữa các module và giữa các thực thể chính chỉ lưu ID; service gom ID rồi lấy dữ liệu liên quan **bằng một query** (`IN (...)`) và ghép trong bộ nhớ. Quan hệ JPA chỉ dùng cho thực thể con bên trong một thực thể chính (`Attempt` → `Answer`) |
-| Dữ liệu giám sát sao chép từ module khác có thể bị lệch so với thực tế | `proctoring` chỉ lưu dữ liệu riêng của nó (heartbeat, nhật ký sự kiện bất thường); trạng thái bài làm **hỏi `ExaminationApi`** mỗi lần giáo viên xem, nên không bao giờ lệch |
+| Dữ liệu giám sát sao chép từ module khác có thể bị lệch so với thực tế | `proctoring` chỉ lưu dữ liệu riêng của nó (nhật ký sự kiện bất thường); trạng thái bài làm **hỏi `ExaminationApi`** mỗi lần giáo viên xem, nên không bao giờ lệch |
 | Schema database lệch giữa các môi trường | **Flyway** quản lý migration; Hibernate chỉ kiểm tra (`validate`) |
 | Mỗi API trả lỗi một kiểu, frontend khó xử lý | Mọi lỗi theo chuẩn **ProblemDetail** (RFC 9457) kèm `code` cố định |
 | Lombok và MapStruct sinh code ẩn lúc biên dịch: khó lần theo luồng dữ liệu, `@Data`/`@Setter` tạo setter public phá vỡ luật của entity | **Không dùng Lombok và MapStruct.** DTO dùng `record`; entity tự viết constructor và chỉ các getter cần thiết, **không có setter**; chuyển entity sang DTO bằng hàm viết tay (`QuestionDto.from(question)`) |
@@ -149,11 +149,10 @@ Màn hình giám sát của giáo viên, cập nhật định kỳ bằng pollin
 | Giáo viên xem được | Giáo viên can thiệp được |
 |---|---|
 | Ai đang ở phòng chờ, đang làm, đã nộp | **Cộng thêm giờ** cho một học sinh |
-| Tiến độ từng học sinh (đã trả lời bao nhiêu câu) và thời gian còn lại | **Buộc nộp bài** |
-| Ai **mất kết nối** (không gửi tín hiệu quá 45 giây) | **Khóa bài** của học sinh vi phạm |
+| Tiến độ từng học sinh (đã trả lời bao nhiêu câu) và thời gian còn lại | **Khóa bài** của học sinh vi phạm |
 | **Sự kiện bất thường** (rời tab, thoát toàn màn hình) và nhật ký chi tiết của từng học sinh | |
 
-Dữ liệu đến từ **trình duyệt học sinh**, tự gửi heartbeat định kỳ và báo các sự kiện bất thường.
+Sự kiện bất thường do **trình duyệt học sinh** tự báo khi xảy ra. MVP không có heartbeat nên chưa biết ai mất kết nối ([ADR-0019](docs/adr/0019-mvp-khong-co-heartbeat.md)).
 
 ### 3.5. Ngoài phạm vi MVP
 
@@ -165,7 +164,7 @@ Dữ liệu đến từ **trình duyệt học sinh**, tự gửi heartbeat đ�
 | Lớp học, giao bài theo danh sách, biết ai vắng thi | Thêm module `classroom` |
 | Ngân hàng câu hỏi dùng chung, gắn tag, sinh đề ngẫu nhiên | |
 | Phiên bản đề | Hiện tại dùng snapshot lúc mở kỳ thi |
-| Giám sát realtime bằng SSE/WebSocket | MVP dùng polling |
+| Giám sát realtime bằng SSE/WebSocket, phát hiện học sinh mất kết nối | MVP dùng polling, không có heartbeat ([ADR-0019](docs/adr/0019-mvp-khong-co-heartbeat.md)) |
 | Thống kê, báo cáo nâng cao | |
 | Vai trò quản trị (ADMIN) | |
 
@@ -178,7 +177,7 @@ Một ứng dụng Spring Boot duy nhất (**modular monolith**), deploy một l
 ```mermaid
 flowchart LR
     T["Giáo viên<br/>(trình duyệt)"] -->|"REST + JWT"| SEC
-    S["Học sinh<br/>(trình duyệt)"] -->|"REST + JWT<br/>heartbeat"| SEC
+    S["Học sinh<br/>(trình duyệt)"] -->|"REST + JWT<br/>sự kiện giám sát"| SEC
 
     subgraph APP["Spring Boot application"]
         SEC["Spring Security<br/>GlobalExceptionHandler"] --> MODS
@@ -243,9 +242,9 @@ sequenceDiagram
     HS->>EX: Nhập mã, bắt đầu làm bài
     loop Trong lúc làm bài
         HS->>EX: Lưu đáp án
-        HS->>PR: Heartbeat, sự kiện bất thường
+        HS->>PR: Sự kiện bất thường
         GV->>PR: Polling màn hình giám sát
-        PR->>EX: getAttemptSummaries(sessionId)
+        PR->>EX: getSessionAttempts(sessionId, teacherId)
         EX-->>PR: Trạng thái, tiến độ, hạn chót
     end
     HS->>EX: Nộp bài, tự chấm
@@ -342,7 +341,7 @@ Swagger UI cho biết **có những endpoint nào và dữ liệu ra sao**. Tài
 |---|---|---|
 | Đường dẫn gốc | Mọi API nằm dưới `/api` | `/api/exam/...` |
 | Tiền tố theo module | Mỗi module một tiền tố (xem bảng dưới) | `/api/design/questions` |
-| Tên tài nguyên | Danh từ số nhiều, chữ thường, nối bằng `-` | `/api/exam/sessions`, `/api/proctor/attempt-events` |
+| Tên tài nguyên | Danh từ số nhiều, chữ thường, nối bằng `-` | `/api/exam/sessions`, `/api/proctor/attempts/{attemptId}/events` |
 | Hành động không phải CRUD | Động từ đặt sau tài nguyên, dùng `POST` | `POST /api/exam/attempts/42/submit` |
 | Tên field JSON | `camelCase` | `startedAt`, `answeredCount` |
 | Giá trị enum | `UPPER_SNAKE_CASE` | `IN_PROGRESS`, `SUBMITTED` |
@@ -359,7 +358,7 @@ Frontend tự chuyển thời gian sang giờ địa phương khi hiển thị. 
 | `identity` | `/api/auth/**` | Công khai (đăng nhập, đăng ký) |
 | `examdesign` | `/api/design/**` | TEACHER |
 | `examination` | `/api/exam/**` | STUDENT và TEACHER (kiểm tra chi tiết trong từng endpoint) |
-| `proctoring` | `/api/proctor/**` | STUDENT gửi heartbeat/sự kiện; TEACHER xem màn hình giám sát |
+| `proctoring` | `/api/proctor/**` | STUDENT gửi sự kiện; TEACHER xem màn hình giám sát, cộng giờ, khóa bài |
 
 Bảng trên chỉ là **phân quyền thô theo tiền tố**. Quyền theo dữ liệu (học sinh chỉ xem bài của mình, giáo viên chỉ giám sát kỳ thi của mình) do từng module tự kiểm tra.
 
@@ -386,7 +385,7 @@ Authorization: Bearer <access-token>
 | Cập nhật toàn bộ | `PUT` | `200 OK` | DTO sau khi cập nhật |
 | Cập nhật một phần | `PATCH` | `200 OK` | DTO sau khi cập nhật |
 | Xóa | `DELETE` | `204 No Content` | trống |
-| Hành động không cần trả dữ liệu (lưu đáp án, heartbeat) | `POST` / `PUT` | `204 No Content` | trống |
+| Hành động không cần trả dữ liệu (lưu đáp án, báo sự kiện giám sát) | `POST` / `PUT` | `204 No Content` | trống |
 
 ### 6.5. Response thành công
 
