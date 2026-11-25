@@ -24,7 +24,7 @@ Database duy nhất là PostgreSQL ([ADR-0014](adr/0014-chi-dung-postgresql-test
 | `identity` | `identity_user` |
 | `examdesign` | `design_question`, `design_exam`, `design_exam_question` |
 | `examination` | `exam_session`, `exam_session_question`, `exam_participant`, `exam_attempt`, `exam_answer`, `exam_join_failure` |
-| `proctoring` | `proctor_presence`, `proctor_event` |
+| `proctoring` | `proctor_event` |
 
 ## 3. `identity`
 
@@ -163,15 +163,6 @@ erDiagram
 
 ```mermaid
 erDiagram
-    proctor_presence {
-        bigint attempt_id PK "ID exam_attempt"
-        bigint session_id "ID exam_session"
-        bigint student_id "ID identity_user"
-        timestamptz first_seen_at
-        timestamptz last_seen_at
-        int current_question "vị trí câu đang xem, từ 1, có thể rỗng"
-        int violation_count
-    }
     proctor_event {
         bigint id PK
         bigint attempt_id "ID exam_attempt"
@@ -184,12 +175,12 @@ erDiagram
     }
 ```
 
-- **`proctor_presence`** chỉ chứa dữ liệu mà `proctoring` tự có; trạng thái bài làm luôn hỏi qua `ExaminationApi` ([ADR-0011](adr/0011-giam-sat-hoi-qua-examination-api.md)). Dòng được tạo ở heartbeat đầu tiên, sau khi đã xác nhận bài làm thuộc về học sinh đang gửi.
+- Trạng thái bài làm luôn hỏi qua `ExaminationApi` ([ADR-0011](adr/0011-giam-sat-hoi-qua-examination-api.md)). Mỗi sự kiện từ trình duyệt đều được xác nhận bài làm thuộc về học sinh đang gửi.
+- MVP không có heartbeat, không có bảng tình trạng kết nối ([ADR-0019](adr/0019-mvp-khong-co-heartbeat.md)).
 - **`proctor_event.type`**:
   - Từ trình duyệt: `TAB_HIDDEN`, `TAB_VISIBLE`, `FULLSCREEN_EXIT`.
-  - Từ server: `DISCONNECTED`, `RECONNECTED`, ghi khi heartbeat đến sau một khoảng lặng quá 45 giây (`DISCONNECTED` lấy thời điểm `last_seen_at` cũ). Không cần job để phát hiện mất kết nối.
   - Thao tác của giáo viên: `TEACHER_EXTENDED_TIME`, `TEACHER_LOCKED`, ghi sau khi lời gọi `ExaminationApi` thành công, để có nhật ký kiểm tra.
-- **`violation_count`** tăng khi nhận `TAB_HIDDEN` hoặc `FULLSCREEN_EXIT`, để màn hình giám sát không phải đếm lại nhật ký mỗi lần polling.
+- **Số vi phạm** không lưu riêng: đếm các dòng `TAB_HIDDEN` và `FULLSCREEN_EXIT` của bài làm.
 - `occurred_at` do trình duyệt gửi nên chỉ để tham khảo; mọi so sánh thời gian dùng `received_at`.
 
 ## 7. Tham chiếu giữa các module
@@ -202,7 +193,7 @@ Các cột dưới đây chỉ lưu ID, không có foreign key. Module sở hữ
 | `exam_participant.student_id`, `exam_attempt.student_id`, `exam_join_failure.student_id` | `identity_user.id` | Lấy từ người đang đăng nhập |
 | `exam_session.exam_id` | `design_exam.id` | Khi tạo và khi mở kỳ thi, qua `ExamDesignApi` |
 | `exam_session_question.source_question_id` | `design_question.id` | Không kiểm tra; chỉ để truy vết |
-| `proctor_presence.*`, `proctor_event.*` (`attempt_id`, `session_id`, `student_id`) | `exam_attempt`, `exam_session`, `identity_user` | Heartbeat đầu tiên, qua `ExaminationApi` |
+| `proctor_event` (`attempt_id`, `session_id`, `student_id`) | `exam_attempt`, `exam_session`, `identity_user` | Mỗi khi nhận sự kiện, qua `ExaminationApi` |
 
 ## 8. Index
 
@@ -218,5 +209,4 @@ Các cột dưới đây chỉ lưu ID, không có foreign key. Module sở hữ
 | `exam_attempt` | `UNIQUE (session_id, student_id)`, `(deadline) WHERE status = 'IN_PROGRESS'`, `(student_id)` | Một bài mỗi kỳ thi; job chốt bài hết giờ; lịch sử của học sinh |
 | `exam_answer` | `UNIQUE (attempt_id, session_question_id)` | Mỗi câu một đáp án |
 | `exam_join_failure` | `(student_id, failed_at)` | Đếm số lần nhập sai gần đây |
-| `proctor_presence` | `PK (attempt_id)`, `(session_id)` | Heartbeat; màn hình giám sát |
-| `proctor_event` | `(session_id, received_at)`, `(attempt_id, received_at)` | Polling sự kiện mới (`?since=`); nhật ký của một học sinh |
+| `proctor_event` | `(session_id, received_at)`, `(attempt_id, received_at)` | Polling sự kiện mới (`?since=`), đếm vi phạm; nhật ký của một học sinh |

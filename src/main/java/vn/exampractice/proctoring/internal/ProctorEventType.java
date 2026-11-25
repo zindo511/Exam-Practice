@@ -12,12 +12,6 @@ enum ProctorEventType {
     /** Trình duyệt báo: học sinh thoát toàn màn hình. */
     FULLSCREEN_EXIT,
 
-    /** Server suy ra từ khoảng lặng giữa hai heartbeat. */
-    DISCONNECTED,
-
-    /** Server suy ra: heartbeat đến lại sau khoảng lặng. */
-    RECONNECTED,
-
     /** Giáo viên cộng giờ. */
     TEACHER_EXTENDED_TIME,
 

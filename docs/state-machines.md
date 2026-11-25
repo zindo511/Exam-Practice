@@ -101,5 +101,4 @@ Trạng thái được lưu bằng cột `archived_at` (rỗng là `ACTIVE`), kh
 |---|---|
 | Tham gia kỳ thi (`SessionParticipant`) | Có dòng là đã tham gia; không có vòng đời nào khác |
 | "Chưa vào thi" trên màn hình giám sát | Tính lúc đọc: đã tham gia nhưng chưa có bài làm |
-| Online / mất kết nối | Tính lúc đọc: `now − last_seen_at` so với 45 giây ([ADR-0011](adr/0011-giam-sat-hoi-qua-examination-api.md)) |
-| Số vi phạm | Bộ đếm, không phải trạng thái; giáo viên tự quyết định ([ADR-0012](adr/0012-mat-ket-noi-khong-tu-dong-xu-ly.md)) |
+| Số vi phạm | Đếm từ nhật ký lúc đọc, không phải trạng thái; giáo viên tự quyết định ([ADR-0012](adr/0012-mat-ket-noi-khong-tu-dong-xu-ly.md)) |

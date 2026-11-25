@@ -104,7 +104,7 @@ class ExaminationApiImplTest {
         assertThat(api.getSessionAttempts(session.getId(), teacherId + 1)).isEmpty();
     }
 
-    /** ADR-0011: học sinh không gửi heartbeat thay cho bài của người khác được. */
+    /** ADR-0011: học sinh không gửi sự kiện giám sát thay cho bài của người khác được. */
     @Test
     void attempt_of_student_is_found_only_for_its_owner() {
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);

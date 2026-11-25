@@ -1,6 +1,6 @@
 # ADR-0011: Giám sát hỏi trạng thái qua `ExaminationApi`, polling trước
 
-- **Trạng thái:** Đã chấp nhận
+- **Trạng thái:** Đã chấp nhận; phần heartbeat và `proctor_presence` bị thay thế bởi [ADR-0019](0019-mvp-khong-co-heartbeat.md)
 - **Ngày:** 2026-11-15
 
 ## Bối cảnh

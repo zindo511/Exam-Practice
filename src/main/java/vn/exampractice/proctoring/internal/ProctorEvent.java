@@ -15,9 +15,6 @@ import jakarta.persistence.Table;
 /**
  * Một dòng nhật ký giám sát (bảng {@code proctor_event}), làm bằng chứng cho giáo viên (ADR-0012). Chỉ
  * ghi thêm, không sửa.
- *
- * <p>Không phải danh sách con của {@link Presence}: số dòng tăng dần không giới hạn, và thao tác của giáo
- * viên được ghi cả khi học sinh chưa gửi heartbeat nào.
  */
 @Entity
 @Table(name = "proctor_event")
