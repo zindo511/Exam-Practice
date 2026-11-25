@@ -1,5 +1,7 @@
 package vn.exampractice.examination.internal;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -39,6 +41,9 @@ interface SessionParticipantRepository extends JpaRepository<SessionParticipant,
                                             @Param("notStarted") boolean notStarted,
                                             @Param("status") AttemptStatus status,
                                             Pageable pageable);
+
+    /** Mọi học sinh đã tham gia kỳ thi, ai vào phòng chờ trước đứng trước; cho màn hình giám sát. */
+    List<SessionParticipant> findBySessionIdOrderByJoinedAtAscIdAsc(Long sessionId);
 
     /** Số học sinh đã tham gia kỳ thi, cho phần tóm tắt của bảng điểm. */
     long countBySessionId(Long sessionId);

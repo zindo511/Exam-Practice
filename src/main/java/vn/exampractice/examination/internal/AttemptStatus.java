@@ -6,7 +6,7 @@ enum AttemptStatus {
     /** Đang làm; lưu đáp án và nộp được tới hạn chót cộng 5 giây ân hạn. */
     IN_PROGRESS,
 
-    /** Học sinh tự nộp, hoặc giáo viên buộc nộp. */
+    /** Học sinh tự nộp. */
     SUBMITTED,
 
     /** Hết giờ, hoặc kỳ thi đóng khi bài còn đang làm. */

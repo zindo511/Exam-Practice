@@ -147,6 +147,44 @@ class ExamSessionServiceScheduleTest {
         assertThat(attempt.getCorrectCount()).isEqualTo(1);
     }
 
+    /** ADR-0018: còn bài được cộng giờ chưa hết ân hạn thì chưa đóng kỳ thi. */
+    @Test
+    void close_on_schedule_waits_for_an_extended_attempt() {
+        ExamSession session = scheduled(EXAM);
+        session.open(List.of(new ExamSession.SnapshotQuestion(1, 9L, "Câu", List.of("A", "B"), 0)), 15, START);
+        Instant now = END.plusSeconds(60);
+        when(repository.findById(SESSION)).thenReturn(Optional.of(session));
+        when(attemptRepository.existsBySessionIdAndStatusAndDeadlineGreaterThanEqual(
+                SESSION, AttemptStatus.IN_PROGRESS, now.minus(Attempt.GRACE))).thenReturn(true);
+
+        assertThat(service.closeOnSchedule(SESSION, now)).isFalse();
+        assertThat(session.getStatus()).isEqualTo(SessionStatus.OPEN);
+    }
+
+    /** Bài cộng giờ cuối cùng đã hết giờ: kỳ thi ghi nhận đóng lúc hạn chót muộn nhất, không phải endAt. */
+    @Test
+    void close_on_schedule_after_extension_records_the_latest_deadline() {
+        ExamSession session = mock(ExamSession.class);
+        Instant latest = END.plus(Duration.ofMinutes(10));
+        Instant now = latest.plusSeconds(6);
+        when(repository.findById(SESSION)).thenReturn(Optional.of(session));
+        when(session.isDueToClose(now)).thenReturn(true);
+        when(session.getStatus()).thenReturn(SessionStatus.OPEN);
+        when(session.getEndAt()).thenReturn(END);
+        when(session.getId()).thenReturn(SESSION);
+        when(session.grading()).thenReturn(new Grading(Map.of(1L, 0), 10));
+        Attempt extended = Attempt.start(SESSION, 9L, 300, END, START);
+        extended.extendTime(10, START);
+        when(attemptRepository.findLatestDeadline(SESSION)).thenReturn(Optional.of(extended.getDeadline()));
+        when(attemptRepository.findBySessionIdAndStatus(SESSION, AttemptStatus.IN_PROGRESS)).thenReturn(List.of(extended));
+
+        assertThat(service.closeOnSchedule(SESSION, now)).isTrue();
+
+        verify(session).close(latest);
+        assertThat(extended.getStatus()).isEqualTo(AttemptStatus.EXPIRED);
+        assertThat(extended.getSubmittedAt()).isEqualTo(latest);
+    }
+
     @Test
     void close_on_schedule_waits_for_grace_period() {
         ExamSession session = scheduled(EXAM);

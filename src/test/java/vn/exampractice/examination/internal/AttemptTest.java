@@ -123,6 +123,70 @@ class AttemptTest {
         assertThatThrownBy(() -> attempt.expire(GRADING, NOW)).isInstanceOf(IllegalStateException.class);
     }
 
+    /** ADR-0018: cộng giờ dời hạn chót, được phép vượt giờ đóng kỳ thi. */
+    @Test
+    void extend_time_moves_the_deadline_even_past_session_end() {
+        Attempt attempt = Attempt.start(5L, 9L, 120, SESSION_END, NOW);
+        assertThat(attempt.getDeadline()).isEqualTo(SESSION_END);
+
+        attempt.extendTime(10, SESSION_END.minusSeconds(60));
+
+        assertThat(attempt.getDeadline()).isEqualTo(SESSION_END.plus(Duration.ofMinutes(10)));
+        attempt.saveAnswer(1L, 0, SESSION_END.plus(Duration.ofMinutes(5)));
+        assertThat(attempt.isOverdue(SESSION_END.plus(Duration.ofMinutes(5)))).isFalse();
+    }
+
+    /** Sau hạn chót (kể cả trong ân hạn) không cộng giờ được: trình duyệt đã tự nộp khi đồng hồ về 0. */
+    @Test
+    void extend_time_is_refused_after_the_deadline_or_when_finished() {
+        Attempt attempt = Attempt.start(5L, 9L, 45, SESSION_END, NOW);
+        Instant deadline = attempt.getDeadline();
+
+        attempt.extendTime(1, deadline);
+        expect(ExaminationErrorCode.ATTEMPT_EXPIRED, () -> attempt.extendTime(1, attempt.getDeadline().plusSeconds(1)));
+        assertThatThrownBy(() -> attempt.extendTime(0, NOW)).isInstanceOf(IllegalArgumentException.class);
+
+        attempt.submit(GRADING, NOW);
+        expect(ExaminationErrorCode.ATTEMPT_ALREADY_SUBMITTED, () -> attempt.extendTime(5, NOW));
+    }
+
+    @Test
+    void lock_ends_the_attempt_now_and_grades_saved_answers() {
+        Attempt attempt = Attempt.start(5L, 9L, 45, SESSION_END, NOW);
+        attempt.saveAnswer(1L, 0, NOW);
+
+        attempt.lock(GRADING, NOW.plusSeconds(90));
+
+        assertThat(attempt.getStatus()).isEqualTo(AttemptStatus.LOCKED);
+        assertThat(attempt.getSubmittedAt()).isEqualTo(NOW.plusSeconds(90));
+        assertThat(attempt.getCorrectCount()).isEqualTo(1);
+        assertThat(attempt.getScore()).isEqualTo(new BigDecimal("6.67"));
+        expect(ExaminationErrorCode.ATTEMPT_LOCKED, () -> attempt.saveAnswer(2L, 1, NOW));
+        expect(ExaminationErrorCode.ATTEMPT_LOCKED, () -> attempt.lock(GRADING, NOW));
+    }
+
+    /** Khóa bài đã quá hạn mà job chưa chốt: ghi nhận kết thúc lúc hạn chót, không phải lúc khóa. */
+    @Test
+    void lock_after_deadline_records_the_deadline() {
+        Attempt attempt = Attempt.start(5L, 9L, 45, SESSION_END, NOW);
+
+        attempt.lock(GRADING, attempt.getDeadline().plusSeconds(20));
+
+        assertThat(attempt.getSubmittedAt()).isEqualTo(attempt.getDeadline());
+    }
+
+    /** MVP: chỉ khóa được bài đang làm, bài đã kết thúc giữ nguyên. */
+    @Test
+    void finished_attempts_cannot_be_locked() {
+        Attempt submitted = Attempt.start(5L, 9L, 45, SESSION_END, NOW);
+        submitted.submit(GRADING, NOW);
+        Attempt expired = Attempt.start(5L, 10L, 45, SESSION_END, NOW);
+        expired.expire(GRADING, expired.getDeadline());
+
+        expect(ExaminationErrorCode.ATTEMPT_ALREADY_SUBMITTED, () -> submitted.lock(GRADING, NOW));
+        expect(ExaminationErrorCode.ATTEMPT_EXPIRED, () -> expired.lock(GRADING, NOW));
+    }
+
     @Test
     void grading_rounds_half_up_to_2_decimals() {
         Map<Long, Integer> thirty = new java.util.HashMap<>();

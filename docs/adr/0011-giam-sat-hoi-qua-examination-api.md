@@ -14,13 +14,13 @@ Ban đầu dự định để `examination` phát event (`AttemptStarted`, `Answ
 ## Quyết định
 
 **`proctoring` chỉ lưu dữ liệu mà chỉ nó có:**
-- `proctor_presence`: mỗi bài làm một dòng (`attempt_id`, `session_id`, `student_id`, `last_seen_at`, câu đang xem), cập nhật bằng heartbeat. Ở heartbeat đầu tiên, `proctoring` hỏi `ExaminationApi` để xác nhận bài làm thuộc về học sinh đang đăng nhập, sau đó kiểm tra tại chỗ bằng dòng này.
+- `proctor_presence`: mỗi bài làm một dòng (`attempt_id`, `session_id`, `student_id`, `last_seen_at`, câu đang xem), cập nhật bằng heartbeat. Ở heartbeat đầu tiên, `proctoring` hỏi `ExaminationApi.findAttemptOfStudent` để xác nhận bài làm thuộc về học sinh đang đăng nhập, sau đó kiểm tra tại chỗ bằng dòng này.
 - `proctor_event`: nhật ký chỉ ghi thêm (rời tab, mất và có lại kết nối…), để xem chi tiết và làm bằng chứng.
 
 **Trạng thái bài làm luôn hỏi từ nguồn gốc.** Mỗi lần giáo viên tải màn hình giám sát:
-1. Gọi `ExaminationApi.getAttemptSummaries(sessionId)`: danh sách thí sinh đã tham gia, trạng thái, số câu đã trả lời, hạn chót.
+1. Gọi `ExaminationApi.getSessionAttempts(sessionId, teacherId)`: danh sách thí sinh đã tham gia, trạng thái, số câu đã trả lời, hạn chót.
 2. Đọc `proctor_presence` và số vi phạm của kỳ thi đó.
-3. Lấy tên học sinh qua `IdentityApi.getUsersByIds(...)`.
+3. Lấy tên học sinh qua `IdentityApi.findUsers(...)`.
 4. Ghép theo ID trong bộ nhớ ([ADR-0007](0007-flat-id-linking.md)); tính lúc đọc: `online = now − last_seen_at < 45 giây`, thời gian còn lại = `deadline − now`.
 
 **Không có event giữa các module ở MVP.** `examination` không gọi, không import, không biết `proctoring` tồn tại.

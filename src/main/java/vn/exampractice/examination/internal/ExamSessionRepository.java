@@ -49,14 +49,20 @@ interface ExamSessionRepository extends JpaRepository<ExamSession, Long> {
     List<Long> findIdsDueToOpen(@Param("now") Instant now, Limit limit);
 
     /**
-     * Kỳ thi job cần đóng (đang mở) hoặc hủy (chưa từng mở), có giờ đóng trước {@code cutoff}. Dùng partial
-     * index {@code ix_exam_session_active_end}.
+     * Kỳ thi job cần đóng (đang mở) hoặc hủy (chưa từng mở), có giờ đóng trước {@code cutoff}, và không
+     * còn bài đang làm nào có hạn chót từ {@code cutoff} trở đi (bài được cộng giờ vượt giờ đóng, ADR-0018).
+     * Dùng partial index {@code ix_exam_session_active_end}.
      */
     @Query("""
             select s.id from ExamSession s
             where s.status in (vn.exampractice.examination.internal.SessionStatus.SCHEDULED,
                                vn.exampractice.examination.internal.SessionStatus.OPEN)
               and s.endAt < :cutoff
+              and not exists (
+                  select 1 from Attempt a
+                  where a.sessionId = s.id
+                    and a.status = vn.exampractice.examination.internal.AttemptStatus.IN_PROGRESS
+                    and a.deadline >= :cutoff)
             order by s.endAt, s.id""")
     List<Long> findIdsDueToClose(@Param("cutoff") Instant cutoff, Limit limit);
 }
