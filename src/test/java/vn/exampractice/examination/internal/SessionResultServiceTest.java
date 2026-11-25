@@ -16,14 +16,15 @@ import org.mockito.quality.Strictness;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import vn.exampractice.identity.IdentityApi;
 import vn.exampractice.identity.dto.UserSummary;
 import vn.exampractice.shared.error.BusinessException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
@@ -63,7 +64,8 @@ class SessionResultServiceTest {
         when(sessionRepository.findByIdAndTeacherId(SESSION, TEACHER)).thenReturn(Optional.of(session));
         SessionParticipant alice = SessionParticipant.join(SESSION, ALICE, START);
         SessionParticipant bob = SessionParticipant.join(SESSION, BOB, START.plusSeconds(30));
-        when(participantRepository.findBySessionId(any(), any())).thenReturn(new PageImpl<>(List.of(alice, bob)));
+        when(participantRepository.findResultPage(SESSION, false, null, FIRST_PAGE))
+                .thenReturn(new PageImpl<>(List.of(alice, bob)));
         when(participantRepository.countBySessionId(SESSION)).thenReturn(2L);
         Attempt aliceAttempt = submittedAttempt(ALICE);
         when(attemptRepository.findBySessionIdAndStudentIdIn(SESSION, List.of(ALICE, BOB)))
@@ -73,7 +75,7 @@ class SessionResultServiceTest {
                 ALICE, new UserSummary(ALICE, "alice", "Nguyễn Alice"),
                 BOB, new UserSummary(BOB, "bob", "Trần Bob")));
 
-        SessionResultsResponse response = service.results(TEACHER, SESSION, FIRST_PAGE);
+        SessionResultsResponse response = service.results(TEACHER, SESSION, null, FIRST_PAGE);
 
         assertThat(response.totalQuestions()).isEqualTo(2);
         assertThat(response.students().content()).hasSize(2);
@@ -98,9 +100,9 @@ class SessionResultServiceTest {
     void results_of_a_session_without_participants_do_not_ask_identity() {
         ExamSession session = openSession(ResultVisibility.SCORE);
         when(sessionRepository.findByIdAndTeacherId(SESSION, TEACHER)).thenReturn(Optional.of(session));
-        when(participantRepository.findBySessionId(any(), any())).thenReturn(new PageImpl<>(List.of()));
+        when(participantRepository.findResultPage(SESSION, false, null, FIRST_PAGE)).thenReturn(new PageImpl<>(List.of()));
 
-        SessionResultsResponse response = service.results(TEACHER, SESSION, FIRST_PAGE);
+        SessionResultsResponse response = service.results(TEACHER, SESSION, null, FIRST_PAGE);
 
         assertThat(response.students().content()).isEmpty();
         assertThat(response.summary().participantCount()).isZero();
@@ -108,10 +110,47 @@ class SessionResultServiceTest {
     }
 
     @Test
+    void not_started_filter_asks_only_for_participants_without_an_attempt() {
+        ExamSession session = openSession(ResultVisibility.SCORE);
+        when(sessionRepository.findByIdAndTeacherId(SESSION, TEACHER)).thenReturn(Optional.of(session));
+        when(participantRepository.findResultPage(SESSION, true, null, FIRST_PAGE))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        service.results(TEACHER, SESSION, ResultFilter.NOT_STARTED, FIRST_PAGE);
+
+        verify(participantRepository).findResultPage(SESSION, true, null, FIRST_PAGE);
+    }
+
+    @Test
+    void attempt_status_filter_is_passed_to_the_query() {
+        ExamSession session = openSession(ResultVisibility.SCORE);
+        when(sessionRepository.findByIdAndTeacherId(SESSION, TEACHER)).thenReturn(Optional.of(session));
+        when(participantRepository.findResultPage(SESSION, false, AttemptStatus.SUBMITTED, FIRST_PAGE))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        service.results(TEACHER, SESSION, ResultFilter.SUBMITTED, FIRST_PAGE);
+
+        verify(participantRepository).findResultPage(SESSION, false, AttemptStatus.SUBMITTED, FIRST_PAGE);
+    }
+
+    /** Bảng điểm luôn xếp theo điểm trong query; {@code ?sort=} của client bị bỏ qua. */
+    @Test
+    void sort_from_the_client_is_ignored() {
+        ExamSession session = openSession(ResultVisibility.SCORE);
+        when(sessionRepository.findByIdAndTeacherId(SESSION, TEACHER)).thenReturn(Optional.of(session));
+        when(participantRepository.findResultPage(SESSION, false, null, FIRST_PAGE))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        service.results(TEACHER, SESSION, null, PageRequest.of(0, 20, Sort.by("joinedAt")));
+
+        verify(participantRepository).findResultPage(SESSION, false, null, FIRST_PAGE);
+    }
+
+    @Test
     void results_of_another_teachers_session_are_not_found() {
         when(sessionRepository.findByIdAndTeacherId(SESSION, TEACHER)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.results(TEACHER, SESSION, FIRST_PAGE))
+        assertThatThrownBy(() -> service.results(TEACHER, SESSION, null, FIRST_PAGE))
                 .isInstanceOf(BusinessException.class)
                 .satisfies(e -> assertThat(((BusinessException) e).getErrorCode())
                         .isEqualTo(ExaminationErrorCode.SESSION_NOT_FOUND));

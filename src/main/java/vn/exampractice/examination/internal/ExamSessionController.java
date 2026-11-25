@@ -100,13 +100,15 @@ class ExamSessionController {
     }
 
     /**
-     * Bảng điểm: mọi học sinh đã tham gia (kể cả chưa làm bài) kèm điểm, và tóm tắt cả kỳ thi. Mặc định
-     * ai vào phòng chờ trước đứng trước.
+     * Bảng điểm: mọi học sinh đã tham gia (kể cả chưa làm bài) kèm điểm, và tóm tắt cả kỳ thi. Luôn xếp
+     * điểm cao trước, chưa có điểm xuống cuối; {@code ?status=} lọc theo trạng thái, {@code NOT_STARTED}
+     * là chưa làm bài.
      */
     @GetMapping("/{id}/results")
     SessionResultsResponse results(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id,
+                                   @RequestParam(required = false) ResultFilter status,
                                    @ParameterObject Pageable pageable) {
-        return resultService.results(user.id(), id, pageable);
+        return resultService.results(user.id(), id, status, pageable);
     }
 
     /** Chi tiết một bài làm: từng câu học sinh chọn gì và đáp án đúng. */

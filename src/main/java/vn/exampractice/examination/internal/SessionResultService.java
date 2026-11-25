@@ -7,7 +7,6 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.exampractice.identity.IdentityApi;
@@ -26,9 +25,6 @@ import vn.exampractice.shared.web.PageResponse;
 @Transactional(readOnly = true)
 class SessionResultService {
 
-    /** Thứ tự mặc định của bảng điểm: ai vào phòng chờ trước đứng trước. */
-    private static final Sort JOINED_FIRST = Sort.by(Sort.Order.asc("joinedAt"), Sort.Order.asc("id"));
-
     private final ExamSessionRepository sessionRepository;
     private final SessionParticipantRepository participantRepository;
     private final AttemptRepository attemptRepository;
@@ -45,19 +41,26 @@ class SessionResultService {
     }
 
     /**
-     * Bảng điểm: mọi học sinh đã nhập mã, kể cả người chưa bắt đầu làm bài, kèm bài làm và điểm.
+     * Bảng điểm: mọi học sinh đã nhập mã, kể cả người chưa bắt đầu làm bài, kèm bài làm và điểm. Xếp
+     * điểm cao trước, chưa có điểm xuống cuối (xem {@link SessionParticipantRepository#findResultPage}).
      *
      * <ol>
-     *   <li>Lấy một trang học sinh đã tham gia.</li>
+     *   <li>Lấy một trang học sinh đã tham gia, đã lọc và xếp theo điểm.</li>
      *   <li>Lấy bài làm của các học sinh trong trang bằng một truy vấn.</li>
      *   <li>Lấy tên của các học sinh trong trang bằng một lần gọi {@link IdentityApi}.</li>
      *   <li>Ghép lại thành từng dòng; tóm tắt tính trên cả kỳ thi.</li>
      * </ol>
+     *
+     * @param filter lọc theo trạng thái; rỗng thì lấy tất cả
      */
-    SessionResultsResponse results(Long teacherId, Long sessionId, Pageable pageable) {
+    SessionResultsResponse results(Long teacherId, Long sessionId, ResultFilter filter, Pageable pageable) {
         ExamSession session = findOwned(teacherId, sessionId);
 
-        Page<SessionParticipant> participants = participantRepository.findBySessionId(sessionId, withDefaultSort(pageable));
+        boolean notStarted = filter == ResultFilter.NOT_STARTED;
+        AttemptStatus status = filter == null ? null : filter.attemptStatus();
+        Pageable unsorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        Page<SessionParticipant> participants =
+                participantRepository.findResultPage(sessionId, notStarted, status, unsorted);
         List<Long> studentIds = participants.getContent().stream().map(SessionParticipant::getStudentId).toList();
 
         Map<Long, Attempt> attemptByStudent = new HashMap<>();
@@ -92,12 +95,5 @@ class SessionResultService {
     private ExamSession findOwned(Long teacherId, Long sessionId) {
         return sessionRepository.findByIdAndTeacherId(sessionId, teacherId)
                 .orElseThrow(() -> new BusinessException(ExaminationErrorCode.SESSION_NOT_FOUND));
-    }
-
-    private static Pageable withDefaultSort(Pageable pageable) {
-        if (pageable.getSort().isSorted()) {
-            return pageable;
-        }
-        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), JOINED_FIRST);
     }
 }
