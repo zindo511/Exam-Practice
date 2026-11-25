@@ -77,7 +77,7 @@ Lý do của các quyết định kỹ thuật (bối cảnh, phương án đã 
 |---|---|
 | Giáo viên sửa đề trong lúc kỳ thi đang diễn ra | Chụp **snapshot đề** khi mở kỳ thi; sửa đề gốc chỉ áp dụng cho các kỳ thi sau |
 | Học sinh mất kết nối hoặc tải lại trang | Đáp án **tự động lưu** lên server; quay lại thì làm tiếp từ chỗ cũ |
-| Mất kết nối chưa chắc là gian lận | Hệ thống **chỉ hiển thị và ghi nhật ký**, không tự động xử lý; giáo viên quyết định cộng giờ, buộc nộp hay khóa bài |
+| Mất kết nối chưa chắc là gian lận | Hệ thống **chỉ hiển thị và ghi nhật ký**, không tự động xử lý; giáo viên quyết định cộng giờ hay khóa bài |
 | Học sinh chỉnh đồng hồ máy để kéo dài thời gian | Thời gian tính theo **giờ server**; hết giờ thì tự nộp |
 | Hết giờ nhưng học sinh không bấm nộp (đóng trình duyệt, mất mạng) | **Job trên server tự chốt bài** khoảng mỗi 30 giây và chấm điểm từ đáp án đã lưu; không phụ thuộc vào trình duyệt |
 | Đáp án đúng bị lộ qua API khi đang làm bài | Dữ liệu gửi xuống trình duyệt **không chứa đáp án đúng**; chỉ server chấm |
@@ -198,7 +198,7 @@ flowchart LR
 
 ```mermaid
 flowchart RL
-    PR["proctoring"] -->|"ExaminationApi<br/>trạng thái bài làm,<br/>cộng giờ, buộc nộp, khóa bài"| EX["examination"]
+    PR["proctoring"] -->|"ExaminationApi<br/>trạng thái bài làm,<br/>cộng giờ, khóa bài"| EX["examination"]
     EX -->|"ExamDesignApi<br/>lấy snapshot đề"| ED["examdesign"]
     ED --> ID["identity"]
     EX --> ID

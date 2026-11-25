@@ -20,7 +20,7 @@ stateDiagram-v2
 |---|---|---|---|---|
 | `create` | → `SCHEDULED` | Giáo viên | Đề tồn tại, chưa lưu trữ, có ít nhất 1 câu (hỏi `ExamDesignApi`); `start_at < end_at`; `end_at` ở tương lai | Lưu `exam_id`, sao chép tên đề; sinh `access_code`; `join_open = true` |
 | `open` | `SCHEDULED` → `OPEN` | Giáo viên bấm "Bắt đầu", hoặc job khi tới `start_at` | `now < end_at`; đề vẫn dùng được: tồn tại, chưa lưu trữ, có ít nhất 1 câu (hỏi `ExamDesignApi`) | Chụp snapshot câu hỏi và thời lượng ([ADR-0003](adr/0003-snapshot-de-khi-mo-ky-thi.md)); ghi `opened_at` |
-| `close` | `OPEN` → `CLOSED` | Job khi quá `end_at` + 5 giây ân hạn, hoặc giáo viên kết thúc sớm | — | `join_open = false`; mọi bài `IN_PROGRESS` chuyển `EXPIRED`; job ghi `closed_at = end_at` |
+| `close` | `OPEN` → `CLOSED` | Job khi quá `end_at` + 5 giây ân hạn và không còn bài được cộng giờ đang làm ([ADR-0018](adr/0018-cong-gio-vuot-gio-dong-ky-thi.md)), hoặc giáo viên kết thúc sớm | — | `join_open = false`; mọi bài `IN_PROGRESS` chuyển `EXPIRED`; job ghi `closed_at = max(end_at, hạn chót muộn nhất)` |
 | `cancel` | `SCHEDULED` → `CANCELLED` | Giáo viên bất cứ lúc nào trước khi mở; hoặc job khi tới `start_at` mà đề không còn dùng được, hay khi quá `end_at` mà kỳ thi chưa từng mở | — | Mã tham gia hết hiệu lực; không có bài làm nào |
 | `lockJoin` / `unlockJoin` | không đổi | Giáo viên | `SCHEDULED` hoặc `OPEN` | Đổi `join_open` |
 | `changeResultVisibility` | không đổi | Giáo viên | Mọi trạng thái | Đổi những gì học sinh được xem sau khi bài kết thúc (`HIDDEN`, `SCORE`, `SCORE_AND_ANSWERS`); đáp án chỉ hiện khi kỳ thi đã `CLOSED` |
@@ -33,7 +33,7 @@ Mã tham gia sinh một lần khi tạo và không đổi; mã bị lộ thì gi
 
 **Kỳ thi chưa từng mở thì không bao giờ thành `CLOSED`.** Nếu job không chạy suốt khoảng `start_at`–`end_at` (ví dụ ứng dụng tắt), lượt đầu tiên sau đó thấy kỳ thi đã quá giờ đóng mà vẫn `SCHEDULED`: kỳ thi không diễn ra nên bị hủy. Nếu ứng dụng chạy lại khi còn trong khoảng giờ thi thì job mở kỳ thi bình thường.
 
-Job chờ hết 5 giây ân hạn sau `end_at` mới đóng, vì `end_at` cũng là hạn chót muộn nhất của bài làm và học sinh còn được nộp trong ân hạn ([ADR-0013](adr/0013-xu-ly-het-gio-lam-bai.md)).
+Job chờ hết 5 giây ân hạn sau `end_at` mới đóng, vì học sinh còn được nộp trong ân hạn ([ADR-0013](adr/0013-xu-ly-het-gio-lam-bai.md)). Bài được giáo viên cộng giờ có thể có hạn chót sau `end_at`; khi đó job chờ bài đó hết hạn chót cộng ân hạn rồi mới đóng, nên kỳ thi có thể còn `OPEN` sau `end_at` ([ADR-0018](adr/0018-cong-gio-vuot-gio-dong-ky-thi.md)). Sau `end_at` không ai bắt đầu bài mới được.
 
 **Thao tác được phép theo trạng thái:**
 
@@ -53,7 +53,7 @@ Sai trạng thái trả `INVALID_SESSION_STATE`; nhập mã khi kỳ thi không 
 stateDiagram-v2
     [*] --> IN_PROGRESS : start()
     IN_PROGRESS --> IN_PROGRESS : saveAnswer(), extendTime()
-    IN_PROGRESS --> SUBMITTED : submit(), forceSubmit()
+    IN_PROGRESS --> SUBMITTED : submit()
     IN_PROGRESS --> EXPIRED : expire() (job hoặc kỳ thi đóng)
     IN_PROGRESS --> LOCKED : lock()
     SUBMITTED --> [*]
@@ -65,13 +65,12 @@ stateDiagram-v2
 |---|---|---|---|---|
 | `start` | → `IN_PROGRESS` | Học sinh | Kỳ thi `OPEN`; đã tham gia; chưa có bài làm trong kỳ thi này | `deadline = min(now + thời lượng, end_at)` ([ADR-0013](adr/0013-xu-ly-het-gio-lam-bai.md)) |
 | `saveAnswer` | giữ `IN_PROGRESS` | Học sinh | `now ≤ deadline + 5 giây` | Thêm hoặc sửa đáp án của một câu |
-| `extendTime` | giữ `IN_PROGRESS` | Giáo viên | `now ≤ deadline`; số phút > 0 | `deadline` cộng thêm số phút |
+| `extendTime` | giữ `IN_PROGRESS` | Giáo viên | `now ≤ deadline`; số phút > 0, không giới hạn | `deadline` cộng thêm số phút, được vượt `end_at` ([ADR-0018](adr/0018-cong-gio-vuot-gio-dong-ky-thi.md)) |
 | `submit` | → `SUBMITTED` | Học sinh | `now ≤ deadline + 5 giây` | Chấm điểm; `submitted_at = now` |
-| `forceSubmit` | → `SUBMITTED` | Giáo viên | — | Chấm điểm; `submitted_at = now` |
 | `expire` | → `EXPIRED` | Job, hoặc khi kỳ thi đóng | Job: quá hạn chót + 5 giây ân hạn; hoặc kỳ thi đóng | Chấm điểm; `submitted_at = deadline` (hoặc lúc đóng nếu sớm hơn) |
-| `lock` | → `LOCKED` | Giáo viên | — | Chấm điểm; `submitted_at = now`; bài được đánh dấu để giáo viên xem xét |
+| `lock` | → `LOCKED` | Giáo viên, khi học sinh vi phạm | Bài đang `IN_PROGRESS` (bài đã kết thúc thì không khóa được) | Kết thúc ngay, chấm điểm; `submitted_at = min(now, deadline)` |
 
-- Cả ba trạng thái kết thúc đều **có điểm**, tính từ các đáp án đã lưu. Trạng thái cho biết bài kết thúc bằng cách nào.
+- Cả ba trạng thái kết thúc đều **có điểm**, tính từ các đáp án đã lưu. Trạng thái cho biết bài kết thúc bằng cách nào và do ai: `SUBMITTED` là học sinh tự nộp, `EXPIRED` là hệ thống chốt khi hết giờ, `LOCKED` là giáo viên khóa vì vi phạm. Vì vậy không cần cột riêng ghi "ai kết thúc bài".
 - Thao tác lên bài đã kết thúc trả lỗi theo trạng thái: `SUBMITTED` → `ATTEMPT_ALREADY_SUBMITTED`, `EXPIRED` hoặc quá hạn chót → `ATTEMPT_EXPIRED`, `LOCKED` → `ATTEMPT_LOCKED`.
 - Bắt đầu làm bài khi chưa tham gia trả `NOT_A_PARTICIPANT`; bắt đầu lần thứ hai trả `ATTEMPT_ALREADY_STARTED`.
 - Mọi thay đổi đều làm tăng `version` (kể cả lưu đáp án), để phát hiện thao tác đồng thời.

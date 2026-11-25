@@ -30,7 +30,7 @@ identity ◀ examdesign ◀ examination ◀ proctoring
 
 - `examdesign` không biết `examination`; `examination` không biết `proctoring`.
 - Nếu A gọi Api của B thì B không được gọi Api của A.
-- `proctoring` lấy trạng thái bài làm và gửi lệnh của giáo viên (cộng giờ, buộc nộp, khóa bài) đều qua `ExaminationApi` ([ADR-0011](0011-giam-sat-hoi-qua-examination-api.md)).
+- `proctoring` lấy trạng thái bài làm và gửi lệnh của giáo viên (cộng giờ, khóa bài) đều qua `ExaminationApi` ([ADR-0011](0011-giam-sat-hoi-qua-examination-api.md)).
 
 **Event: chưa dùng ở MVP.** Mọi giao tiếp giữa module đều là gọi Api đồng bộ. Khi sau này một module ở bên trái cần **báo** cho module ở bên phải (ví dụ `examination` báo "bài vừa được nộp" để đẩy thời gian thực tới màn hình giám sát), dùng event thay vì gọi ngược Api:
 - Class event đặt trong `<module>/event/`, là phần công khai của module phát.

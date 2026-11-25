@@ -145,7 +145,8 @@ class ExamSessionService {
 
     /**
      * Job đóng một kỳ thi đã quá giờ đóng cộng ân hạn. Kỳ thi đang mở thì chốt các bài còn dở như khi
-     * giáo viên kết thúc, ghi nhận đóng lúc {@code endAt}.
+     * giáo viên kết thúc, ghi nhận đóng lúc {@code endAt}. Còn bài được cộng giờ chưa hết ân hạn thì chưa
+     * đóng, chờ lượt sau (ADR-0018); khi đó ghi nhận đóng lúc hạn chót muộn nhất.
      *
      * <p>Kỳ thi vẫn {@code SCHEDULED} lúc này nghĩa là job chưa từng tới lượt mở nó trong khoảng giờ thi
      * (ví dụ ứng dụng tắt suốt khoảng đó): kỳ thi không diễn ra nên bị hủy, không chuyển {@code CLOSED}.
@@ -162,9 +163,24 @@ class ExamSessionService {
             session.cancel();
             log.info("Hủy kỳ thi {} vì đã quá giờ đóng mà chưa từng được mở", sessionId);
         } else {
-            closeAndExpireAttempts(session, session.getEndAt());
+            Instant cutoff = now.minus(Attempt.GRACE);
+            if (attemptRepository.existsBySessionIdAndStatusAndDeadlineGreaterThanEqual(
+                    sessionId, AttemptStatus.IN_PROGRESS, cutoff)) {
+                return false;
+            }
+            closeAndExpireAttempts(session, closingTime(session));
         }
         return true;
+    }
+
+    /**
+     * Lúc kỳ thi kết thúc theo lịch: giờ đóng, hoặc hạn chót của bài được cộng giờ muộn nhất nếu muộn hơn
+     * (ADR-0018). Bài còn sót lại lúc này đều đã quá hạn chót, nên được chốt đúng lúc hạn chót của nó.
+     */
+    private Instant closingTime(ExamSession session) {
+        return attemptRepository.findLatestDeadline(session.getId())
+                .filter(latest -> latest.isAfter(session.getEndAt()))
+                .orElse(session.getEndAt());
     }
 
     /**

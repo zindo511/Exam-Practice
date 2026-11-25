@@ -116,14 +116,19 @@ class Attempt {
      * trạng thái (state-machines.md mục 2).
      */
     void ensureAcceptingWrites(Instant now) {
+        ensureInProgress();
+        if (Objects.requireNonNull(now, "now").isAfter(deadline.plus(GRACE))) {
+            throw new BusinessException(ExaminationErrorCode.ATTEMPT_EXPIRED);
+        }
+    }
+
+    /** Bài chưa kết thúc; đã kết thúc thì báo lỗi theo trạng thái (state-machines.md mục 2). */
+    private void ensureInProgress() {
         switch (status) {
             case SUBMITTED -> throw new BusinessException(ExaminationErrorCode.ATTEMPT_ALREADY_SUBMITTED);
             case EXPIRED -> throw new BusinessException(ExaminationErrorCode.ATTEMPT_EXPIRED);
             case LOCKED -> throw new BusinessException(ExaminationErrorCode.ATTEMPT_LOCKED);
             case IN_PROGRESS -> {
-                if (Objects.requireNonNull(now, "now").isAfter(deadline.plus(GRACE))) {
-                    throw new BusinessException(ExaminationErrorCode.ATTEMPT_EXPIRED);
-                }
             }
         }
     }
@@ -146,6 +151,35 @@ class Attempt {
     void submit(Grading grading, Instant now) {
         ensureAcceptingWrites(now);
         finish(AttemptStatus.SUBMITTED, grading, now);
+    }
+
+    /**
+     * Giáo viên cộng thêm giờ cho bài đang làm, ví dụ học sinh mất mạng thật (ADR-0012). Chỉ cộng được khi
+     * chưa quá hạn chót: sau hạn chót trình duyệt đã tự nộp và học sinh không còn ghi được nữa.
+     *
+     * <p>Hạn chót mới được phép vượt giờ đóng kỳ thi; job chờ bài này hết giờ rồi mới đóng kỳ thi
+     * (ADR-0018).
+     */
+    void extendTime(int minutes, Instant now) {
+        if (minutes < 1) {
+            throw new IllegalArgumentException("minutes must be positive");
+        }
+        ensureInProgress();
+        if (Objects.requireNonNull(now, "now").isAfter(deadline)) {
+            throw new BusinessException(ExaminationErrorCode.ATTEMPT_EXPIRED);
+        }
+        this.deadline = deadline.plus(Duration.ofMinutes(minutes));
+    }
+
+    /**
+     * Giáo viên khóa bài vì vi phạm: bài kết thúc ngay ở {@code LOCKED}, chấm từ các đáp án đã lưu
+     * (ADR-0012). Khóa được cả bài đã quá hạn chót mà job chưa kịp chốt; khi đó ghi nhận kết thúc lúc hạn
+     * chót, để học sinh không có thêm giờ trên giấy.
+     */
+    void lock(Grading grading, Instant now) {
+        ensureInProgress();
+        Objects.requireNonNull(now, "now");
+        finish(AttemptStatus.LOCKED, grading, now.isBefore(deadline) ? now : deadline);
     }
 
     /**

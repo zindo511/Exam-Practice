@@ -15,7 +15,7 @@ Thực tế:
 
 - "Mất kết nối" chỉ là **thông tin hiển thị** cho giáo viên, tính lúc đọc, không phải căn cứ để hệ thống tự hành động.
 - Mỗi lần mất và có lại kết nối được ghi vào nhật ký `proctor_event` để làm bằng chứng.
-- **Giáo viên quyết định**: cộng thêm giờ (mất mạng thật), khóa bài (nghi gian lận), buộc nộp (không thể quay lại), hoặc không làm gì.
+- **Giáo viên quyết định**: cộng thêm giờ (mất mạng thật, [ADR-0018](0018-cong-gio-vuot-gio-dong-ky-thi.md)), khóa bài (vi phạm: bài kết thúc ngay và được chấm, đánh dấu `LOCKED`), hoặc không làm gì. Không có thao tác buộc nộp riêng: học sinh không quay lại được thì bài tự chốt khi hết giờ.
 - Hệ thống **không có thao tác hủy (xóa) bài**. Nặng nhất là **khóa bài**: học sinh không làm tiếp được nhưng bài làm vẫn được giữ.
 
 Thiết kế hiện có đã tự xử lý hậu quả của việc mất kết nối:
