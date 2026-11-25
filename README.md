@@ -149,8 +149,8 @@ Màn hình giám sát của giáo viên, cập nhật định kỳ bằng pollin
 | Giáo viên xem được | Giáo viên can thiệp được |
 |---|---|
 | Ai đang ở phòng chờ, đang làm, đã nộp | **Cộng thêm giờ** cho một học sinh |
-| Tiến độ từng học sinh (đã trả lời bao nhiêu câu) và thời gian còn lại | **Buộc nộp bài** |
-| Ai **mất kết nối** (không gửi tín hiệu quá 45 giây) | **Khóa bài** của học sinh vi phạm |
+| Tiến độ từng học sinh (đã trả lời bao nhiêu câu) và thời gian còn lại | **Khóa bài** của học sinh vi phạm |
+| Ai **mất kết nối** (không gửi tín hiệu quá 45 giây) | |
 | **Sự kiện bất thường** (rời tab, thoát toàn màn hình) và nhật ký chi tiết của từng học sinh | |
 
 Dữ liệu đến từ **trình duyệt học sinh**, tự gửi heartbeat định kỳ và báo các sự kiện bất thường.
@@ -245,7 +245,7 @@ sequenceDiagram
         HS->>EX: Lưu đáp án
         HS->>PR: Heartbeat, sự kiện bất thường
         GV->>PR: Polling màn hình giám sát
-        PR->>EX: getAttemptSummaries(sessionId)
+        PR->>EX: getSessionAttempts(sessionId, teacherId)
         EX-->>PR: Trạng thái, tiến độ, hạn chót
     end
     HS->>EX: Nộp bài, tự chấm

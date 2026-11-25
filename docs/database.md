@@ -169,7 +169,7 @@ erDiagram
         bigint student_id "ID identity_user"
         timestamptz first_seen_at
         timestamptz last_seen_at
-        int current_question "câu đang xem, có thể rỗng"
+        int current_question "vị trí câu đang xem, từ 1, có thể rỗng"
         int violation_count
     }
     proctor_event {
@@ -188,7 +188,7 @@ erDiagram
 - **`proctor_event.type`**:
   - Từ trình duyệt: `TAB_HIDDEN`, `TAB_VISIBLE`, `FULLSCREEN_EXIT`.
   - Từ server: `DISCONNECTED`, `RECONNECTED`, ghi khi heartbeat đến sau một khoảng lặng quá 45 giây (`DISCONNECTED` lấy thời điểm `last_seen_at` cũ). Không cần job để phát hiện mất kết nối.
-  - Thao tác của giáo viên: `TEACHER_EXTENDED_TIME`, `TEACHER_FORCED_SUBMIT`, `TEACHER_LOCKED`, ghi sau khi lời gọi `ExaminationApi` thành công, để có nhật ký kiểm tra.
+  - Thao tác của giáo viên: `TEACHER_EXTENDED_TIME`, `TEACHER_LOCKED`, ghi sau khi lời gọi `ExaminationApi` thành công, để có nhật ký kiểm tra.
 - **`violation_count`** tăng khi nhận `TAB_HIDDEN` hoặc `FULLSCREEN_EXIT`, để màn hình giám sát không phải đếm lại nhật ký mỗi lần polling.
 - `occurred_at` do trình duyệt gửi nên chỉ để tham khảo; mọi so sánh thời gian dùng `received_at`.
 
