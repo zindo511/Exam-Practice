@@ -60,6 +60,9 @@ Status `404` cho "không tìm thấy", `409` cho vi phạm luật hoặc sai tr�
 
 | `code` | Status | Khi nào |
 |---|---|---|
-| `ATTEMPT_NOT_FOUND` | 404 | Gửi sự kiện giám sát cho bài làm không tồn tại hoặc của học sinh khác; cùng mã và status với `examination` vì cùng ý nghĩa |
+| `SESSION_NOT_FOUND` | 404 | Xem bảng giám sát của kỳ thi không tồn tại hoặc thuộc giáo viên khác |
+| `ATTEMPT_NOT_FOUND` | 404 | Gửi sự kiện giám sát cho bài làm không tồn tại hoặc của học sinh khác |
+
+Hai mã này cùng tên và status với `examination` vì cùng ý nghĩa.
 
 Cộng giờ và khóa bài trả thẳng mã của `examination`: `ATTEMPT_NOT_FOUND`, `ATTEMPT_ALREADY_SUBMITTED`, `ATTEMPT_EXPIRED`, `ATTEMPT_LOCKED`.
