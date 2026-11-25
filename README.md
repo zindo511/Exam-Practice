@@ -375,6 +375,8 @@ Authorization: Bearer <access-token>
 | Thiếu token, token sai hoặc hết hạn | `401` với `code = UNAUTHENTICATED` |
 | Token hợp lệ nhưng không đủ quyền | `403` với `code = FORBIDDEN` |
 
+Giao diện chạy khác địa chỉ với API (khác tên miền hoặc cổng) thì thêm địa chỉ đó vào `CORS_ALLOWED_ORIGINS` ([`.env.example`](.env.example)). JWT gửi bằng header nên không dùng cookie.
+
 ### 6.4. HTTP method và status code khi thành công
 
 | Thao tác | Method | Status | Body |
