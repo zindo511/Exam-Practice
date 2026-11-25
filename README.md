@@ -358,7 +358,7 @@ Frontend tự chuyển thời gian sang giờ địa phương khi hiển thị. 
 | `identity` | `/api/auth/**` | Công khai (đăng nhập, đăng ký) |
 | `examdesign` | `/api/design/**` | TEACHER |
 | `examination` | `/api/exam/**` | STUDENT và TEACHER (kiểm tra chi tiết trong từng endpoint) |
-| `proctoring` | `/api/proctor/**` | STUDENT gửi sự kiện; TEACHER xem màn hình giám sát |
+| `proctoring` | `/api/proctor/**` | STUDENT gửi sự kiện; TEACHER xem màn hình giám sát, cộng giờ, khóa bài |
 
 Bảng trên chỉ là **phân quyền thô theo tiền tố**. Quyền theo dữ liệu (học sinh chỉ xem bài của mình, giáo viên chỉ giám sát kỳ thi của mình) do từng module tự kiểm tra.
 

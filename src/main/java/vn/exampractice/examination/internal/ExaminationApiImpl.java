@@ -62,7 +62,7 @@ class ExaminationApiImpl implements ExaminationApi {
                     .map(participant -> {
                         Attempt attempt = attemptByStudent.get(participant.getStudentId());
                         if (attempt == null) {
-                            return notStarted(participant.getStudentId());
+                            return notStarted(session.getId(), participant.getStudentId());
                         }
                         return summary(attempt, answeredByAttempt.getOrDefault(attempt.getId(), 0L).intValue());
                     })
@@ -116,13 +116,14 @@ class ExaminationApiImpl implements ExaminationApi {
         return new OwnedAttempt(attempt, session);
     }
 
-    private static AttemptSummary notStarted(Long studentId) {
-        return new AttemptSummary(studentId, null, AttemptState.NOT_STARTED, 0, null, null, null);
+    private static AttemptSummary notStarted(Long sessionId, Long studentId) {
+        return new AttemptSummary(sessionId, studentId, null, AttemptState.NOT_STARTED, 0, null, null, null);
     }
 
     private static AttemptSummary summary(Attempt attempt, int answeredCount) {
-        return new AttemptSummary(attempt.getStudentId(), attempt.getId(), toState(attempt.getStatus()),
-                answeredCount, attempt.getStartedAt(), attempt.getDeadline(), attempt.getSubmittedAt());
+        return new AttemptSummary(attempt.getSessionId(), attempt.getStudentId(), attempt.getId(),
+                toState(attempt.getStatus()), answeredCount, attempt.getStartedAt(), attempt.getDeadline(),
+                attempt.getSubmittedAt());
     }
 
     private static AttemptState toState(AttemptStatus status) {

@@ -92,6 +92,7 @@ class ExaminationApiImplTest {
         assertThat(aliceRow.deadline()).isEqualTo(attempt.getDeadline());
         AttemptSummary bobRow = result.attempts().get(1);
         assertThat(bobRow.status()).isEqualTo(AttemptState.NOT_STARTED);
+        assertThat(bobRow.sessionId()).isEqualTo(session.getId());
         assertThat(bobRow.attemptId()).isNull();
         assertThat(bobRow.answeredCount()).isZero();
     }
@@ -125,6 +126,7 @@ class ExaminationApiImplTest {
 
         AttemptSummary result = api.extendTime(teacherId, attempt.getId(), 10);
 
+        assertThat(result.sessionId()).isEqualTo(session.getId());
         assertThat(result.deadline()).isEqualTo(attempt.getDeadline().plus(Duration.ofMinutes(10)));
         assertThat(attemptRepository.findById(attempt.getId()).orElseThrow().getDeadline()).isEqualTo(result.deadline());
         assertThat(version(attempt.getId())).isGreaterThan(versionBefore);
