@@ -1,8 +1,12 @@
 package vn.exampractice.identity.internal;
 
+import java.time.Duration;
+import java.util.List;
+
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -11,6 +15,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import vn.exampractice.shared.security.ProblemDetailAccessDeniedHandler;
 import vn.exampractice.shared.security.ProblemDetailAuthenticationEntryPoint;
 
@@ -19,6 +26,8 @@ import vn.exampractice.shared.security.ProblemDetailAuthenticationEntryPoint;
  *
  * <ul>
  *   <li>Stateless: không session, không cookie, nên tắt CSRF; mỗi request tự mang JWT.</li>
+ *   <li>CORS: chỉ các địa chỉ giao diện trong {@link CorsProperties} được gọi API từ trình duyệt. Không cho
+ *       gửi cookie vì JWT nằm trong header.</li>
  *   <li>Phân quyền thô theo tiền tố URL (README 6.2). Quyền theo dữ liệu do từng module tự kiểm
  *       tra.</li>
  *   <li>401/403 trả {@code ProblemDetail} qua hai handler của shared.security (README 6.3).</li>
@@ -29,7 +38,7 @@ import vn.exampractice.shared.security.ProblemDetailAuthenticationEntryPoint;
  */
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({JwtProperties.class, CorsProperties.class})
 class SecurityConfig {
 
     private static final String[] SWAGGER = {"/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**"};
@@ -37,9 +46,11 @@ class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,
                                             JwtService jwtService,
+                                            CorsProperties corsProperties,
                                             ProblemDetailAuthenticationEntryPoint entryPoint,
                                             ProblemDetailAccessDeniedHandler accessDeniedHandler) throws Exception {
         return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource(corsProperties)))
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -57,6 +68,25 @@ class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+    /**
+     * Không khai báo địa chỉ nào thì không đặt luật CORS: request thật vẫn chạy như thường, chỉ câu hỏi trước
+     * (preflight) của trình duyệt bị từ chối. Nhờ vậy giao diện đi qua proxy vẫn dùng được.
+     */
+    static CorsConfigurationSource corsConfigurationSource(CorsProperties properties) {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        if (properties.allowedOrigins().isEmpty()) {
+            return source;
+        }
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(properties.allowedOrigins());
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        config.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE));
+        config.setExposedHeaders(List.of(HttpHeaders.LOCATION));
+        config.setMaxAge(Duration.ofHours(1));
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
     }
 
     /** Băm mật khẩu khi đăng ký và so khớp khi đăng nhập. */
