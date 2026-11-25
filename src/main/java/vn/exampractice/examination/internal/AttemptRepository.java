@@ -30,6 +30,15 @@ interface AttemptRepository extends JpaRepository<Attempt, Long> {
 
     Optional<Attempt> findBySessionIdAndStudentId(Long sessionId, Long studentId);
 
+    /** Bài làm của kỳ thi theo ID; bài của kỳ thi khác thì rỗng. Dùng cho giáo viên xem chi tiết. */
+    Optional<Attempt> findByIdAndSessionId(Long id, Long sessionId);
+
+    /** Mọi bài làm của kỳ thi, để tính phần tóm tắt của bảng điểm. */
+    List<Attempt> findBySessionId(Long sessionId);
+
+    /** Bài làm của nhiều học sinh trong một kỳ thi, cho một trang bảng điểm (một truy vấn). */
+    List<Attempt> findBySessionIdAndStudentIdIn(Long sessionId, Collection<Long> studentIds);
+
     /** Các bài còn đang làm của kỳ thi, để chốt khi kỳ thi đóng. */
     List<Attempt> findBySessionIdAndStatus(Long sessionId, AttemptStatus status);
 

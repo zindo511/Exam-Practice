@@ -34,9 +34,11 @@ import vn.exampractice.shared.web.PageResponse;
 class ExamSessionController {
 
     private final ExamSessionService sessionService;
+    private final SessionResultService resultService;
 
-    ExamSessionController(ExamSessionService sessionService) {
+    ExamSessionController(ExamSessionService sessionService, SessionResultService resultService) {
         this.sessionService = sessionService;
+        this.resultService = resultService;
     }
 
     /** 201 kèm header {@code Location} trỏ tới kỳ thi vừa tạo (README 6.4). */
@@ -95,5 +97,22 @@ class ExamSessionController {
     @PostMapping("/{id}/unlock-join")
     SessionResponse unlockJoin(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id) {
         return sessionService.unlockJoin(user.id(), id);
+    }
+
+    /**
+     * Bảng điểm: mọi học sinh đã tham gia (kể cả chưa làm bài) kèm điểm, và tóm tắt cả kỳ thi. Mặc định
+     * ai vào phòng chờ trước đứng trước.
+     */
+    @GetMapping("/{id}/results")
+    SessionResultsResponse results(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id,
+                                   @ParameterObject Pageable pageable) {
+        return resultService.results(user.id(), id, pageable);
+    }
+
+    /** Chi tiết một bài làm: từng câu học sinh chọn gì và đáp án đúng. */
+    @GetMapping("/{id}/attempts/{attemptId}")
+    TeacherAttemptResponse attempt(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id,
+                                   @PathVariable Long attemptId) {
+        return resultService.attempt(user.id(), id, attemptId);
     }
 }
