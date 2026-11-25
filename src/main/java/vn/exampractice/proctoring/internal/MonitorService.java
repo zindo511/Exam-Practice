@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.exampractice.examination.ExaminationApi;
@@ -15,6 +18,7 @@ import vn.exampractice.examination.dto.SessionAttempts;
 import vn.exampractice.identity.IdentityApi;
 import vn.exampractice.identity.dto.UserSummary;
 import vn.exampractice.shared.error.BusinessException;
+import vn.exampractice.shared.web.PageResponse;
 
 /** Màn hình giám sát của giáo viên (ADR-0011). Chỉ đọc. */
 @Service
@@ -45,8 +49,7 @@ class MonitorService {
      */
     @Transactional(readOnly = true)
     MonitorResponse monitor(Long teacherId, Long sessionId) {
-        SessionAttempts session = examinationApi.getSessionAttempts(sessionId, teacherId)
-                .orElseThrow(() -> new BusinessException(ProctoringErrorCode.SESSION_NOT_FOUND));
+        SessionAttempts session = findOwned(teacherId, sessionId);
 
         List<Long> studentIds = session.attempts().stream().map(AttemptSummary::studentId).toList();
         Map<Long, UserSummary> users = identityApi.findUsers(studentIds);
@@ -59,6 +62,29 @@ class MonitorService {
             rows.add(MonitorRow.from(attempt, user, violations));
         }
         return MonitorResponse.from(session, Instant.now(), rows);
+    }
+
+    /**
+     * Nhật ký của một bài làm, luôn xếp mới nhất trước. Kỳ thi của giáo viên khác báo
+     * {@code SESSION_NOT_FOUND}; bài làm không thuộc kỳ thi này báo {@code ATTEMPT_NOT_FOUND}.
+     */
+    @Transactional(readOnly = true)
+    PageResponse<AttemptEventResponse> events(Long teacherId, Long sessionId, Long attemptId, Pageable pageable) {
+        SessionAttempts session = findOwned(teacherId, sessionId);
+        boolean inSession = session.attempts().stream().anyMatch(a -> attemptId.equals(a.attemptId()));
+        if (!inSession) {
+            throw new BusinessException(ProctoringErrorCode.ATTEMPT_NOT_FOUND);
+        }
+
+        Pageable unsorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+        Page<ProctorEvent> events =
+                eventRepository.findByAttemptIdOrderByReceivedAtDescIdDesc(attemptId, unsorted);
+        return PageResponse.from(events.map(AttemptEventResponse::from));
+    }
+
+    private SessionAttempts findOwned(Long teacherId, Long sessionId) {
+        return examinationApi.getSessionAttempts(sessionId, teacherId)
+                .orElseThrow(() -> new BusinessException(ProctoringErrorCode.SESSION_NOT_FOUND));
     }
 
     /** Số vi phạm theo ID bài làm; bài không vi phạm thì không có trong map. */

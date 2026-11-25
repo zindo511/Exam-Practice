@@ -16,7 +16,7 @@ CREATE TABLE proctor_event (
         'TEACHER_EXTENDED_TIME', 'TEACHER_LOCKED'))
 );
 
--- Polling sự kiện mới của một kỳ thi (?since=).
+-- Đếm vi phạm của cả kỳ thi.
 CREATE INDEX ix_proctor_event_session_received ON proctor_event (session_id, received_at);
 
 -- Nhật ký của một học sinh.

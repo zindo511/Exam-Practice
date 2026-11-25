@@ -12,6 +12,10 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import vn.exampractice.examination.ExaminationApi;
 import vn.exampractice.examination.dto.AttemptState;
 import vn.exampractice.examination.dto.AttemptSummary;
@@ -20,6 +24,7 @@ import vn.exampractice.examination.dto.SessionState;
 import vn.exampractice.identity.IdentityApi;
 import vn.exampractice.identity.dto.UserSummary;
 import vn.exampractice.shared.error.BusinessException;
+import vn.exampractice.shared.web.PageResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -122,6 +127,52 @@ class MonitorServiceTest {
                         e -> assertThat(e.getErrorCode()).isEqualTo(ProctoringErrorCode.SESSION_NOT_FOUND));
 
         verifyNoInteractions(identityApi, eventRepository);
+    }
+
+    /** Client gửi sort khác thì bỏ qua: nhật ký luôn xếp mới nhất trước. */
+    @Test
+    void events_are_paged_and_ignore_requested_sort() {
+        givenSession(inProgress(AN, AN_ATTEMPT));
+        ProctorEvent extended = ProctorEvent.of(AN_ATTEMPT, SESSION, AN, ProctorEventType.TEACHER_EXTENDED_TIME,
+                "Cộng 10 phút", SUBMITTED, SUBMITTED);
+        ProctorEvent tabHidden = ProctorEvent.of(AN_ATTEMPT, SESSION, AN, ProctorEventType.TAB_HIDDEN, null,
+                START, START.plusSeconds(1));
+        Pageable unsorted = PageRequest.of(0, 2);
+        when(eventRepository.findByAttemptIdOrderByReceivedAtDescIdDesc(AN_ATTEMPT, unsorted))
+                .thenReturn(new PageImpl<>(List.of(extended, tabHidden), unsorted, 5));
+
+        PageResponse<AttemptEventResponse> response = service.events(TEACHER, SESSION, AN_ATTEMPT,
+                PageRequest.of(0, 2, Sort.by("type")));
+
+        assertThat(response.totalElements()).isEqualTo(5);
+        assertThat(response.totalPages()).isEqualTo(3);
+        assertThat(response.content()).containsExactly(
+                new AttemptEventResponse(null, ProctorEventType.TEACHER_EXTENDED_TIME, "Cộng 10 phút", SUBMITTED,
+                        SUBMITTED, false),
+                new AttemptEventResponse(null, ProctorEventType.TAB_HIDDEN, null, START, START.plusSeconds(1),
+                        true));
+    }
+
+    @Test
+    void events_of_attempt_outside_session_are_not_found() {
+        givenSession(inProgress(AN, AN_ATTEMPT), notStarted(CHI));
+
+        assertThatThrownBy(() -> service.events(TEACHER, SESSION, BINH_ATTEMPT, PageRequest.of(0, 20)))
+                .isInstanceOfSatisfying(BusinessException.class,
+                        e -> assertThat(e.getErrorCode()).isEqualTo(ProctoringErrorCode.ATTEMPT_NOT_FOUND));
+
+        verifyNoInteractions(eventRepository);
+    }
+
+    @Test
+    void events_in_session_of_another_teacher_are_not_found() {
+        when(examinationApi.getSessionAttempts(SESSION, TEACHER)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.events(TEACHER, SESSION, AN_ATTEMPT, PageRequest.of(0, 20)))
+                .isInstanceOfSatisfying(BusinessException.class,
+                        e -> assertThat(e.getErrorCode()).isEqualTo(ProctoringErrorCode.SESSION_NOT_FOUND));
+
+        verifyNoInteractions(eventRepository);
     }
 
     private void givenSession(AttemptSummary... attempts) {

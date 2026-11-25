@@ -60,8 +60,8 @@ Status `404` cho "không tìm thấy", `409` cho vi phạm luật hoặc sai tr�
 
 | `code` | Status | Khi nào |
 |---|---|---|
-| `SESSION_NOT_FOUND` | 404 | Xem bảng giám sát của kỳ thi không tồn tại hoặc thuộc giáo viên khác |
-| `ATTEMPT_NOT_FOUND` | 404 | Gửi sự kiện giám sát cho bài làm không tồn tại hoặc của học sinh khác |
+| `SESSION_NOT_FOUND` | 404 | Xem bảng giám sát hoặc nhật ký của kỳ thi không tồn tại hoặc thuộc giáo viên khác |
+| `ATTEMPT_NOT_FOUND` | 404 | Gửi sự kiện giám sát cho bài làm không tồn tại hoặc của học sinh khác; xem nhật ký của bài làm không thuộc kỳ thi |
 
 Hai mã này cùng tên và status với `examination` vì cùng ý nghĩa.
 

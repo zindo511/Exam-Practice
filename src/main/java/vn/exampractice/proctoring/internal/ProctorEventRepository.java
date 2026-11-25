@@ -3,12 +3,17 @@ package vn.exampractice.proctoring.internal;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /** Nhật ký giám sát. */
 interface ProctorEventRepository extends JpaRepository<ProctorEvent, Long> {
+
+    /** Nhật ký của một bài làm, mới nhất trước. */
+    Page<ProctorEvent> findByAttemptIdOrderByReceivedAtDescIdDesc(Long attemptId, Pageable pageable);
 
     /** Số sự kiện thuộc {@code types} của từng bài trong kỳ thi; bài không có sự kiện nào thì không có dòng. */
     @Query("""

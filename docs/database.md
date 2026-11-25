@@ -209,4 +209,4 @@ Các cột dưới đây chỉ lưu ID, không có foreign key. Module sở hữ
 | `exam_attempt` | `UNIQUE (session_id, student_id)`, `(deadline) WHERE status = 'IN_PROGRESS'`, `(student_id)` | Một bài mỗi kỳ thi; job chốt bài hết giờ; lịch sử của học sinh |
 | `exam_answer` | `UNIQUE (attempt_id, session_question_id)` | Mỗi câu một đáp án |
 | `exam_join_failure` | `(student_id, failed_at)` | Đếm số lần nhập sai gần đây |
-| `proctor_event` | `(session_id, received_at)`, `(attempt_id, received_at)` | Polling sự kiện mới (`?since=`), đếm vi phạm; nhật ký của một học sinh |
+| `proctor_event` | `(session_id, received_at)`, `(attempt_id, received_at)` | Đếm vi phạm của cả kỳ thi; nhật ký của một học sinh |
