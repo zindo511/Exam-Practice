@@ -153,7 +153,7 @@ Màn hình giám sát của giáo viên, cập nhật định kỳ bằng pollin
 | Ai **mất kết nối** (không gửi tín hiệu quá 45 giây) | |
 | **Sự kiện bất thường** (rời tab, thoát toàn màn hình) và nhật ký chi tiết của từng học sinh | |
 
-Dữ liệu đến từ **trình duyệt học sinh**, tự gửi heartbeat định kỳ và báo các sự kiện bất thường.
+Dữ liệu đến từ **trình duyệt học sinh**, tự gửi heartbeat 15 giây một lần và báo các sự kiện bất thường.
 
 ### 3.5. Ngoài phạm vi MVP
 

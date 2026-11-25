@@ -55,3 +55,9 @@ Status `404` cho "không tìm thấy", `409` cho vi phạm luật hoặc sai tr�
 | `ATTEMPT_ALREADY_SUBMITTED` | 409 | Bài thi đã nộp |
 | `ATTEMPT_LOCKED` | 409 | Bài thi bị giáo viên khóa |
 | `SESSION_QUESTION_NOT_FOUND` | 404 | Lưu đáp án cho câu không thuộc bản chụp đề của kỳ thi |
+
+### proctoring
+
+| `code` | Status | Khi nào |
+|---|---|---|
+| `ATTEMPT_NOT_FOUND` | 404 | Gửi tín hiệu giám sát cho bài làm không tồn tại hoặc của học sinh khác; cùng mã và status với `examination` vì cùng ý nghĩa |
