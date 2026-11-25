@@ -341,7 +341,7 @@ Swagger UI cho biết **có những endpoint nào và dữ liệu ra sao**. Tài
 |---|---|---|
 | Đường dẫn gốc | Mọi API nằm dưới `/api` | `/api/exam/...` |
 | Tiền tố theo module | Mỗi module một tiền tố (xem bảng dưới) | `/api/design/questions` |
-| Tên tài nguyên | Danh từ số nhiều, chữ thường, nối bằng `-` | `/api/exam/sessions`, `/api/proctor/attempt-events` |
+| Tên tài nguyên | Danh từ số nhiều, chữ thường, nối bằng `-` | `/api/exam/sessions`, `/api/proctor/attempts/{attemptId}/events` |
 | Hành động không phải CRUD | Động từ đặt sau tài nguyên, dùng `POST` | `POST /api/exam/attempts/42/submit` |
 | Tên field JSON | `camelCase` | `startedAt`, `answeredCount` |
 | Giá trị enum | `UPPER_SNAKE_CASE` | `IN_PROGRESS`, `SUBMITTED` |

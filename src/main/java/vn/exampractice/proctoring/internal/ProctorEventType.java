@@ -18,11 +18,6 @@ enum ProctorEventType {
     /** Giáo viên khóa bài vì vi phạm. */
     TEACHER_LOCKED;
 
-    /** Trình duyệt học sinh được phép gửi loại này; các loại khác chỉ server tự ghi. */
-    boolean isReportedByBrowser() {
-        return this == TAB_HIDDEN || this == TAB_VISIBLE || this == FULLSCREEN_EXIT;
-    }
-
     /** Có tính vào số vi phạm không. Số vi phạm chỉ để giáo viên tham khảo, hệ thống không tự phạt (ADR-0012). */
     boolean isViolation() {
         return this == TAB_HIDDEN || this == FULLSCREEN_EXIT;

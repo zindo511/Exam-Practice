@@ -16,7 +16,7 @@ class ProctorEventTest {
 
     @Test
     void keeps_browser_time_and_server_time_apart() {
-        ProctorEvent event = ProctorEvent.record(12L, 5L, 9L, ProctorEventType.TAB_HIDDEN, null, OCCURRED, RECEIVED);
+        ProctorEvent event = ProctorEvent.of(12L, 5L, 9L, ProctorEventType.TAB_HIDDEN, null, OCCURRED, RECEIVED);
 
         assertThat(event.getAttemptId()).isEqualTo(12L);
         assertThat(event.getSessionId()).isEqualTo(5L);
@@ -31,15 +31,15 @@ class ProctorEventTest {
     void detail_is_at_most_500_characters() {
         String longest = "a".repeat(500);
 
-        assertThat(ProctorEvent.record(12L, 5L, 9L, ProctorEventType.TAB_HIDDEN, longest, OCCURRED, RECEIVED)
+        assertThat(ProctorEvent.of(12L, 5L, 9L, ProctorEventType.TAB_HIDDEN, longest, OCCURRED, RECEIVED)
                 .getDetail()).isEqualTo(longest);
-        assertThatIllegalArgumentException().isThrownBy(() -> ProctorEvent.record(12L, 5L, 9L,
+        assertThatIllegalArgumentException().isThrownBy(() -> ProctorEvent.of(12L, 5L, 9L,
                 ProctorEventType.TAB_HIDDEN, longest + "a", OCCURRED, RECEIVED));
     }
 
     @Test
     void type_is_required() {
         assertThatNullPointerException().isThrownBy(
-                () -> ProctorEvent.record(12L, 5L, 9L, null, null, OCCURRED, RECEIVED));
+                () -> ProctorEvent.of(12L, 5L, 9L, null, null, OCCURRED, RECEIVED));
     }
 }

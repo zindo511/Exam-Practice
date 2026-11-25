@@ -14,11 +14,4 @@ class ProctorEventTypeTest {
         assertThat(Arrays.stream(ProctorEventType.values()).filter(ProctorEventType::isViolation))
                 .containsExactlyInAnyOrder(ProctorEventType.TAB_HIDDEN, ProctorEventType.FULLSCREEN_EXIT);
     }
-
-    @Test
-    void browser_cannot_report_server_or_teacher_events() {
-        assertThat(Arrays.stream(ProctorEventType.values()).filter(ProctorEventType::isReportedByBrowser))
-                .containsExactlyInAnyOrder(ProctorEventType.TAB_HIDDEN, ProctorEventType.TAB_VISIBLE,
-                        ProctorEventType.FULLSCREEN_EXIT);
-    }
 }

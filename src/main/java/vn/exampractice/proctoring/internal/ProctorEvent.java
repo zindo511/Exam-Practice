@@ -68,7 +68,7 @@ class ProctorEvent {
     /**
      * @param detail ghi chú thêm, có thể rỗng, tối đa {@value #MAX_DETAIL_LENGTH} ký tự
      */
-    static ProctorEvent record(Long attemptId, Long sessionId, Long studentId, ProctorEventType type, String detail,
+    static ProctorEvent of(Long attemptId, Long sessionId, Long studentId, ProctorEventType type, String detail,
             Instant occurredAt, Instant receivedAt) {
         if (detail != null && detail.length() > MAX_DETAIL_LENGTH) {
             throw new IllegalArgumentException("detail must not exceed " + MAX_DETAIL_LENGTH + " characters");
