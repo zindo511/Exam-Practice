@@ -1,0 +1,43 @@
+/* Nền ô ly như bản phác thảo. */
+.page {
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding: 48px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    background-color: #ffffff;
+    background-image:
+        linear-gradient(#eceaf8 1px, transparent 1px),
+        linear-gradient(90deg, #eceaf8 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.brand {
+    font-size: 24px;
+    font-weight: 700;
+    color: #43359a;
+}
+
+.card {
+    width: 100%;
+    max-width: 440px;
+    box-sizing: border-box;
+    padding: 40px;
+    background: #ffffff;
+    border: 1px solid #d6d2ec;
+    border-radius: 12px;
+}
+
+.card h1.title {
+    margin: 0 0 24px;
+    font-size: 28px;
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 28px 20px;
+    }
+}
