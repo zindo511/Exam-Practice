@@ -1,0 +1,35 @@
+.options {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+/* Nút tròn và chữ cái thẳng hàng với ô nhập cao 44px. */
+.row > :first-child,
+.letter {
+    margin-top: 11px;
+}
+
+/* Radio.Group của Ant Design đặt font-size: 0, nên phải đặt lại. */
+.letter {
+    width: 16px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.row .input {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+.add {
+    align-self: flex-start;
+}

@@ -17,7 +17,15 @@ export function TeacherLayout() {
 
     return (
         <Layout className={styles.page}>
-            <Layout.Sider theme="light" width={230} breakpoint="md" collapsedWidth={0} className={styles.sider}>
+            <Layout.Sider
+                theme="light"
+                width={230}
+                breakpoint="md"
+                collapsedWidth={0}
+                // Nút mở menu ở màn hẹp; mặc định nằm thấp, đè lên tiêu đề trang.
+                zeroWidthTriggerStyle={{ top: 12 }}
+                className={styles.sider}
+            >
                 <div className={styles.siderBrand}>Exam Practice</div>
                 <Menu
                     mode="inline"
