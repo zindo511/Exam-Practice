@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import { LoginPage } from './features/auth/LoginPage';
+import { RegisterPage } from './features/auth/RegisterPage';
 import { RequireRole } from './features/auth/RequireRole';
 import { NotReadyPage } from './shared/components/NotReadyPage';
 import { StudentLayout } from './shared/layouts/StudentLayout';
@@ -7,6 +8,7 @@ import { TeacherLayout } from './shared/layouts/TeacherLayout';
 
 export const router = createBrowserRouter([
     { path: '/login', element: <LoginPage /> },
+    { path: '/register', element: <RegisterPage /> },
     {
         path: '/teacher',
         element: <RequireRole role="TEACHER" />,

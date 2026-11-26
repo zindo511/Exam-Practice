@@ -1,8 +1,8 @@
 import { Alert, Button, Form, Input, Typography } from 'antd';
 import { useMutation } from '@tanstack/react-query';
-import { Navigate } from 'react-router';
+import { Link, Navigate } from 'react-router';
 import { useAuth } from './AuthContext';
-import styles from './LoginPage.module.css';
+import styles from './AuthPage.module.css';
 import { HOME } from './RequireRole';
 
 type LoginForm = { username: string; password: string };
@@ -44,6 +44,7 @@ export function LoginPage() {
                     )}
                     <Button type="primary" htmlType="submit" block loading={submit.isPending}>Đăng nhập</Button>
                 </Form>
+                <p className={styles.switch}>Chưa có tài khoản? <Link to="/register">Đăng ký</Link></p>
             </main>
         </div>
     );
