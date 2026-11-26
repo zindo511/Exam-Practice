@@ -1,0 +1,28 @@
+.options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+}
+
+.option {
+    color: #4a4a66;
+    overflow-wrap: anywhere;
+}
+
+/* Đáp án đúng: vừa đổi màu vừa gạch chân, để người khó phân biệt màu vẫn thấy. */
+.correct {
+    composes: option;
+    color: #43359a;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
