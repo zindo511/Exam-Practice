@@ -24,6 +24,11 @@ export function listQuestions(page: number, keyword: string): Promise<PageRespon
     return http.get(`/api/design/questions?${params}`);
 }
 
+/** Câu đã lưu trữ hoặc của giáo viên khác báo `QUESTION_NOT_FOUND`. */
+export function getQuestion(id: number): Promise<Question> {
+    return http.get(`/api/design/questions/${id}`);
+}
+
 export function createQuestion(input: QuestionInput): Promise<Question> {
     return http.post('/api/design/questions', input);
 }

@@ -1,0 +1,117 @@
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.titleField {
+    flex: 1 1 360px;
+}
+
+.label {
+    font-weight: 500;
+}
+
+.fieldError {
+    font-size: 14px;
+    color: #8a3600;
+}
+
+/* Thẳng hàng với ô nhập, bỏ qua dòng nhãn phía trên. */
+.saveButton {
+    margin-top: 30px;
+}
+
+.unsaved {
+    font-weight: 500;
+    color: #8a3600;
+}
+
+.savedNote {
+    color: #55566f;
+}
+
+.columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    align-items: start;
+    gap: 24px;
+}
+
+.panel {
+    min-width: 0;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #ffffff;
+    border: 1px solid #dde0ea;
+    border-radius: 12px;
+}
+
+h2.panelTitle {
+    margin: 0;
+    font-size: 20px;
+}
+
+.rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.rows > li + li {
+    border-top: 1px solid #e6e8f0;
+}
+
+.examRow {
+    padding: 12px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.number {
+    flex: 0 0 28px;
+    padding-top: 2px;
+    font-weight: 700;
+    color: #43359a;
+    font-variant-numeric: tabular-nums;
+}
+
+.examBody {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.examContent {
+    font-weight: 600;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.bankRow {
+    padding: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.bankContent {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+    .columns {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .saveButton {
+        margin-top: 0;
+    }
+}

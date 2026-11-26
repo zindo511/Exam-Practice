@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react';
 import { Alert, App, Button, Empty, Flex, Input, Pagination, Skeleton, Typography } from 'antd';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../../shared/http';
+import { useDebouncedValue } from '../../shared/useDebouncedValue';
 import { deleteQuestion, listQuestions, PAGE_SIZE, type Question } from './api';
 import { QuestionFormDialog } from './QuestionFormDialog';
+import { QuestionOptions } from './QuestionOptions';
 import styles from './QuestionListPage.module.css';
-import { useDebouncedValue } from './useDebouncedValue';
-
-const LETTERS = 'ABCDEF';
 
 /** Chưa mở hộp thoại; `'new'` là thêm câu mới; còn lại là câu đang sửa. */
 type Editing = Question | 'new' | null;
@@ -112,17 +111,7 @@ export function QuestionListPage() {
                             <li key={question.id} className={styles.item}>
                                 <div className={styles.body}>
                                     <div className={styles.content}>{question.content}</div>
-                                    <div className={styles.options}>
-                                        {question.options.map((option, index) => (
-                                            <span
-                                                key={index}
-                                                className={index === question.correctOption ? styles.correct : styles.option}
-                                            >
-                                                {LETTERS[index]}. {option}
-                                                {index === question.correctOption && <span className={styles.srOnly}> (đáp án đúng)</span>}
-                                            </span>
-                                        ))}
-                                    </div>
+                                    <QuestionOptions options={question.options} correctOption={question.correctOption} />
                                     {deleteErrors[question.id] !== undefined && (
                                         <div role="alert" className={styles.error}>{deleteErrors[question.id]}</div>
                                     )}

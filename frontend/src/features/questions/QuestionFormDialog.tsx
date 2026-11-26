@@ -70,7 +70,7 @@ export function QuestionFormDialog({ question, onClose, onSaved }: Props) {
             confirmLoading={save.isPending}
             onOk={() => form.submit()}
             onCancel={onClose}
-            maskClosable={false}
+            mask={{ closable: false }}
         >
             <Form<Fields> form={form} layout="vertical" requiredMark={false} initialValues={initialValues} onFinish={submit}>
                 <Form.Item

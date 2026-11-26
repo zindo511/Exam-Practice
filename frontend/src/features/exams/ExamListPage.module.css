@@ -1,0 +1,33 @@
+h1.heading {
+    margin: 0;
+}
+
+.search {
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.label {
+    font-weight: 500;
+}
+
+.table {
+    border: 1px solid #dde0ea;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.title {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.warning {
+    margin-top: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #8a3600;
+}
