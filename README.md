@@ -175,37 +175,20 @@ Sự kiện bất thường do **trình duyệt học sinh** tự báo khi xảy
 
 Một ứng dụng Spring Boot duy nhất (**modular monolith**), deploy một lần, dùng chung một database. Bên trong chia thành 4 module độc lập về nghiệp vụ.
 
-```mermaid
-flowchart LR
-    T["Giáo viên<br/>(trình duyệt)"] -->|"REST + JWT"| SEC
-    S["Học sinh<br/>(trình duyệt)"] -->|"REST + JWT<br/>sự kiện giám sát"| SEC
-
-    subgraph APP["Spring Boot application"]
-        SEC["Spring Security<br/>GlobalExceptionHandler"] --> MODS
-        subgraph MODS["Modules"]
-            ID["identity"]
-            ED["examdesign"]
-            EX["examination"]
-            PR["proctoring"]
-        end
-        SH["shared"]
-    end
-
-    MODS --> DB[("PostgreSQL<br/>schema do Flyway quản lý")]
-```
+![Kiến trúc tổng quan: trình duyệt của giáo viên và học sinh gọi REST qua Spring Security vào bốn module, dùng chung một database PostgreSQL](docs/images/kien-truc-tong-quan.png)
 
 ### 4.2. Module và hướng phụ thuộc
 
 ```mermaid
 flowchart RL
     PR["proctoring"] -->|"ExaminationApi<br/>trạng thái bài làm,<br/>cộng giờ, khóa bài"| EX["examination"]
-    EX -->|"ExamDesignApi<br/>lấy snapshot đề"| ED["examdesign"]
-    ED --> ID["identity"]
-    EX --> ID
+    EX -->|"ExamDesignApi<br/>kiểm tra đề, lấy snapshot đề"| ED["examdesign"]
+    EX -->|"IdentityApi<br/>tên học sinh trên bảng điểm"| ID["identity"]
     PR -->|"IdentityApi<br/>tên học sinh"| ID
 ```
 
-- **Mũi tên là chiều phụ thuộc**, cũng là chiều gọi: `A → B` nghĩa là A gọi Api của B.
+- **Mũi tên là chiều phụ thuộc**, cũng là chiều gọi: `A → B` nghĩa là A gọi Api của B. Sơ đồ vẽ các lời gọi có trong code.
+- `examdesign` không gọi module nào: ID giáo viên lấy từ token ([ADR-0015](docs/adr/0015-lay-nguoi-dang-nhap-qua-authentication-principal.md)). Thứ tự `identity` ◀ `examdesign` ◀ `examination` ◀ `proctoring` ([ADR-0004](docs/adr/0004-public-api-va-chieu-phu-thuoc.md)) là chiều **được phép** phụ thuộc: sau này `examdesign` cần gọi `identity` thì được, nhưng không module nào được gọi ngược chiều.
 - Mọi giao tiếp giữa module là gọi Api đồng bộ; MVP **chưa dùng event** ([ADR-0011](docs/adr/0011-giam-sat-hoi-qua-examination-api.md)).
 - Không có mũi tên nào đi ra từ `examination` tới `proctoring`: `examination` không biết `proctoring` tồn tại.
 - Mọi module được dùng `shared` (`ErrorCode`, `BusinessException`, `PageResponse`, `GlobalExceptionHandler`). `shared` không phụ thuộc module nào và không chứa logic nghiệp vụ.
