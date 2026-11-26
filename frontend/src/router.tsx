@@ -5,6 +5,8 @@ import { RequireRole } from './features/auth/RequireRole';
 import { ExamEditorPage } from './features/exams/ExamEditorPage';
 import { ExamListPage } from './features/exams/ExamListPage';
 import { QuestionListPage } from './features/questions/QuestionListPage';
+import { SessionDetailPage } from './features/sessions/SessionDetailPage';
+import { SessionListPage } from './features/sessions/SessionListPage';
 import { NotReadyPage } from './shared/components/NotReadyPage';
 import { StudentLayout } from './shared/layouts/StudentLayout';
 import { TeacherLayout } from './shared/layouts/TeacherLayout';
@@ -23,7 +25,8 @@ export const router = createBrowserRouter([
                     { path: 'questions', element: <QuestionListPage /> },
                     { path: 'exams', element: <ExamListPage /> },
                     { path: 'exams/:examId', element: <ExamEditorPage /> },
-                    { path: 'sessions', element: <NotReadyPage title="Kỳ thi" /> },
+                    { path: 'sessions', element: <SessionListPage /> },
+                    { path: 'sessions/:sessionId', element: <SessionDetailPage /> },
                 ],
             },
         ],
