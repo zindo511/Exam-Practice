@@ -1,0 +1,243 @@
+h1.heading {
+    margin: 0;
+}
+
+h2.panelTitle {
+    margin: 0;
+    font-size: 20px;
+}
+
+.filter {
+    align-self: flex-start;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.table {
+    border: 1px solid #dde0ea;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.title {
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.label {
+    font-weight: 500;
+}
+
+.muted {
+    color: #55566f;
+}
+
+.warning {
+    font-weight: 500;
+    color: #8a3600;
+}
+
+.code {
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    /* Mã có cả chữ O và số 0: số 0 có gạch chéo để học sinh không nhập nhầm. */
+    font-variant-numeric: slashed-zero;
+}
+
+.timeFields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0 16px;
+}
+
+.overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    align-items: start;
+    gap: 24px;
+}
+
+.panel {
+    min-width: 0;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: #ffffff;
+    border: 1px solid #dde0ea;
+    border-radius: 12px;
+}
+
+/* Mã tham gia để đọc hoặc chiếu cho cả lớp: chữ to trên nền ô ly như bản phác thảo. */
+.codePanel {
+    composes: panel;
+    background-color: #fbfbfe;
+    background-image:
+        linear-gradient(#e9e7f6 1px, transparent 1px),
+        linear-gradient(90deg, #e9e7f6 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.bigCode {
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.14em;
+    color: #43359a;
+    font-variant-numeric: slashed-zero;
+}
+
+.facts {
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 8px 20px;
+}
+
+.facts dt {
+    color: #55566f;
+}
+
+.facts dd {
+    margin: 0;
+    font-weight: 500;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.visibility {
+    width: 100%;
+    max-width: 420px;
+}
+
+.stats {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 12px;
+}
+
+.stats > div {
+    padding: 10px 14px;
+    border: 1px solid #e6e8f0;
+    border-radius: 10px;
+}
+
+.stats dt {
+    font-size: 14px;
+    color: #55566f;
+}
+
+.stats dd {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.studentName {
+    font-weight: 600;
+}
+
+.attempt {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.answerList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.answerList > li + li {
+    border-top: 1px solid #e6e8f0;
+}
+
+.answerRow {
+    padding: 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.answerHead {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.number {
+    flex: 0 0 28px;
+    font-weight: 700;
+    color: #43359a;
+    font-variant-numeric: tabular-nums;
+}
+
+.answerContent {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 600;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.right {
+    font-weight: 700;
+    color: #2f6b2f;
+}
+
+.wrong {
+    font-weight: 700;
+    color: #8a3600;
+}
+
+.choices {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.choice {
+    color: #4a4a66;
+    overflow-wrap: anywhere;
+}
+
+/* Đúng sai vừa đổi màu vừa ghi chữ, để người khó phân biệt màu vẫn đọc được. */
+.choiceCorrect {
+    composes: choice;
+    color: #43359a;
+    font-weight: 700;
+}
+
+.choiceWrong {
+    composes: choice;
+    color: #8a3600;
+    font-weight: 600;
+}
+
+.choiceNote {
+    font-weight: 500;
+}
+
+@media (max-width: 480px) {
+    .bigCode {
+        font-size: 34px;
+    }
+
+    .choices {
+        padding-left: 0;
+    }
+}
