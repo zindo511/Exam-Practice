@@ -1,0 +1,542 @@
+/* Theo bản thiết kế LamBai và KetQua trên canvas phác thảo. */
+
+.muted {
+    color: #55566f;
+}
+
+.saveError {
+    font-weight: 500;
+    color: #8a3600;
+}
+
+/* ---------- Làm bài ---------- */
+
+.examPage {
+    min-height: 100vh;
+    background: #f5f6fa;
+}
+
+.examHeader {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #ffffff;
+    border-bottom: 1px solid #dde0ea;
+}
+
+.examHeaderInner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 32px;
+}
+
+.examTitleBox {
+    flex: 1 1 300px;
+    min-width: 0;
+    font-size: 14px;
+}
+
+h1.examTitle {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.timer {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.time {
+    font-size: 36px;
+    line-height: 1;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #1c1b33;
+}
+
+.timeWarn {
+    composes: time;
+    color: #9a3b00;
+}
+
+.submitButton {
+    min-width: 120px;
+}
+
+.warning {
+    background: #fff0df;
+    border-bottom: 1px solid #f0c79a;
+    color: #7a3200;
+}
+
+.warningInner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 10px 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+}
+
+.warningButton {
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid #c98a4b;
+    border-radius: 8px;
+    background: transparent;
+    color: #7a3200;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.examBody {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 32px 24px 48px;
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 32px;
+}
+
+.questionColumn {
+    flex: 999 1 560px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.questionCard {
+    background: #ffffff;
+    border: 1px solid #dde0ea;
+    border-radius: 12px;
+    padding: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.questionHead {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.questionNumber {
+    font-weight: 600;
+    color: #43359a;
+}
+
+.questionContent {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.4;
+    font-weight: 500;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.option {
+    min-height: 60px;
+    box-sizing: border-box;
+    padding: 12px 20px;
+    border: 2px solid #d3d6e3;
+    border-radius: 8px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.option:hover {
+    border-color: #8f93ab;
+}
+
+.option:focus-within {
+    outline: 3px solid #b9b2ea;
+    outline-offset: 2px;
+}
+
+.option input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    flex: 0 0 auto;
+    accent-color: #43359a;
+}
+
+.optionChecked {
+    composes: option;
+    border-color: #43359a;
+    background: #f1effa;
+}
+
+.optionChecked:hover {
+    border-color: #43359a;
+}
+
+.optionLetter {
+    width: 20px;
+    font-weight: 600;
+}
+
+.optionText {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.navButtons {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.palettePanel {
+    flex: 1 1 290px;
+    background: #ffffff;
+    border: 1px solid #dde0ea;
+    border-radius: 12px;
+    padding: 24px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.paletteHead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+h2.paletteTitle {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.palette {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.cell {
+    height: 46px;
+    padding: 0;
+    box-sizing: border-box;
+    border: 2px solid #c6cadb;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1c1b33;
+    font: inherit;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button.cell,
+button.cellAnswered {
+    cursor: pointer;
+}
+
+.cellAnswered {
+    composes: cell;
+    border-color: #43359a;
+    background: #43359a;
+    color: #ffffff;
+}
+
+/* Viền cam vẫn thấy được trên ô đã trả lời màu tím. */
+.cellCurrent {
+    border-color: #d9730d;
+    box-shadow: inset 0 0 0 2px #ffffff;
+}
+
+/* Sai hoặc bỏ trống: vừa đổi màu vừa gạch ngang số, để người khó phân biệt màu vẫn thấy. */
+.cellWrong {
+    composes: cell;
+    border-color: #8a3600;
+    background: #8a3600;
+    color: #ffffff;
+    text-decoration: line-through;
+}
+
+.legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+    color: #4a4a66;
+}
+
+.legend > div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.swatch {
+    width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    border: 2px solid #c6cadb;
+    background: #ffffff;
+}
+
+.swatchAnswered {
+    composes: swatch;
+    border-color: #43359a;
+    background: #43359a;
+}
+
+.swatchCurrent {
+    composes: swatch;
+    border-color: #d9730d;
+}
+
+.swatchWrong {
+    composes: swatch;
+    border-color: #8a3600;
+    background: #8a3600;
+}
+
+.dialogTitle {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.dialogLead {
+    margin: 8px 0;
+    font-size: 18px;
+}
+
+.dialogButtons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* ---------- Kết quả ---------- */
+
+.resultPage {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.resultHero {
+    border: 1px solid #d6d2ec;
+    border-radius: 12px;
+    padding: 32px 36px;
+    background-color: #ffffff;
+    background-image:
+        linear-gradient(#eceaf8 1px, transparent 1px),
+        linear-gradient(90deg, #eceaf8 1px, transparent 1px);
+    background-size: 24px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px 40px;
+}
+
+.resultHeading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+h1.resultTitle {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.25;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.resultLine {
+    color: #4a4a66;
+}
+
+.resultHidden {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.scoreBox {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+}
+
+.bigScore {
+    font-size: 60px;
+    line-height: 1;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #43359a;
+}
+
+.scoreNote {
+    font-size: 18px;
+}
+
+.resultColumns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+.wrongPanel {
+    flex: 999 1 560px;
+    min-width: 0;
+    background: #ffffff;
+    border: 1px solid #dde0ea;
+    border-radius: 12px;
+    padding: 28px 32px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+h2.panelTitle {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.wrongList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.wrongItem {
+    padding-top: 18px;
+    border-top: 1px solid #e6e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wrongContent {
+    font-size: 18px;
+    font-weight: 500;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.wrongNumber {
+    color: #43359a;
+    font-weight: 600;
+}
+
+.wrongFacts {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 6px 16px;
+}
+
+.wrongFacts dt {
+    color: #55566f;
+}
+
+.wrongFacts dd {
+    margin: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.wrongFacts dd.picked {
+    color: #8a3600;
+}
+
+.noteBox {
+    background: #ffffff;
+    border: 1px solid #dde0ea;
+    border-radius: 12px;
+    padding: 28px 32px;
+    color: #4a4a66;
+}
+
+@media (max-width: 600px) {
+    .examHeaderInner,
+    .examBody,
+    .warningInner {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .examBody {
+        padding-top: 20px;
+        gap: 20px;
+    }
+
+    .time {
+        font-size: 28px;
+    }
+
+    .questionCard {
+        padding: 20px;
+    }
+
+    .questionContent {
+        font-size: 20px;
+    }
+
+    .option {
+        font-size: 16px;
+        padding: 10px 14px;
+    }
+
+    .resultHero,
+    .wrongPanel,
+    .noteBox {
+        padding: 22px 20px;
+    }
+
+    .bigScore {
+        font-size: 48px;
+    }
+
+    .wrongFacts {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

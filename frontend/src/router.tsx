@@ -1,5 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router';
+import { AttemptPage } from './features/attempt/AttemptPage';
 import { LoginPage } from './features/auth/LoginPage';
+import { MySessionsPage } from './features/my-sessions/MySessionsPage';
+import { WaitingRoomPage } from './features/my-sessions/WaitingRoomPage';
 import { RegisterPage } from './features/auth/RegisterPage';
 import { RequireRole } from './features/auth/RequireRole';
 import { ExamEditorPage } from './features/exams/ExamEditorPage';
@@ -7,7 +10,6 @@ import { ExamListPage } from './features/exams/ExamListPage';
 import { QuestionListPage } from './features/questions/QuestionListPage';
 import { SessionDetailPage } from './features/sessions/SessionDetailPage';
 import { SessionListPage } from './features/sessions/SessionListPage';
-import { NotReadyPage } from './shared/components/NotReadyPage';
 import { StudentLayout } from './shared/layouts/StudentLayout';
 import { TeacherLayout } from './shared/layouts/TeacherLayout';
 
@@ -37,8 +39,13 @@ export const router = createBrowserRouter([
         children: [
             {
                 element: <StudentLayout />,
-                children: [{ index: true, element: <NotReadyPage title="Kỳ thi của tôi" /> }],
+                children: [
+                    { index: true, element: <MySessionsPage /> },
+                    { path: 'sessions/:sessionId', element: <WaitingRoomPage /> },
+                ],
             },
+            // Màn làm bài có thanh trên riêng, nên nằm ngoài StudentLayout.
+            { path: 'attempts/:attemptId', element: <AttemptPage /> },
         ],
     },
     { path: '*', element: <Navigate to="/login" replace /> },

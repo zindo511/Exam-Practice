@@ -1,10 +1,14 @@
+import type { ReactNode } from 'react';
 import { Button, Flex, Layout } from 'antd';
 import { Outlet } from 'react-router';
 import { useAuth } from '../../features/auth/AuthContext';
 import styles from './layouts.module.css';
 
-/** Khung trang học sinh: một thanh trên cùng, không có menu. */
-export function StudentLayout() {
+/**
+ * Khung trang học sinh: một thanh trên cùng, không có menu. Dùng làm route cha (nội dung là `Outlet`), hoặc
+ * bọc `children` cho trang tự chọn có thanh trên hay không, như trang bài làm.
+ */
+export function StudentLayout({ children }: { children?: ReactNode }) {
     const { user, logout } = useAuth();
 
     return (
@@ -17,7 +21,7 @@ export function StudentLayout() {
                 </Flex>
             </Layout.Header>
             <Layout.Content className={styles.studentContent}>
-                <Outlet />
+                {children ?? <Outlet />}
             </Layout.Content>
         </Layout>
     );
