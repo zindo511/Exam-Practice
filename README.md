@@ -46,6 +46,7 @@ Hệ thống thi và luyện thi trực tuyến: **giáo viên** soạn đề, m
 ## 1. Giới thiệu
 
 - **Công nghệ:** Java 21, Spring Boot 4, Spring Data JPA, Spring Security (JWT), Flyway, PostgreSQL; test bằng JUnit 5, ArchUnit, Testcontainers
+- **Giao diện:** React, TypeScript, Vite, Ant Design, trong thư mục `frontend/` ([ADR-0020](docs/adr/0020-giao-dien-react-chia-theo-cum.md))
 - **Kiến trúc:** modular monolith, gồm 4 module là các package con của `vn.exampractice`
 
 | Module | Trách nhiệm |
@@ -280,7 +281,7 @@ Cột **Đảm bảo bởi** cho biết ràng buộc được kiểm tra ở đ�
 
 ## 5. Chạy dự án
 
-**Yêu cầu:** JDK 21, PostgreSQL đang chạy, và Docker đang chạy nếu muốn chạy test ([ADR-0014](docs/adr/0014-chi-dung-postgresql-test-bang-testcontainers.md)).
+**Yêu cầu:** JDK 21, PostgreSQL đang chạy, và Docker đang chạy nếu muốn chạy test ([ADR-0014](docs/adr/0014-chi-dung-postgresql-test-bang-testcontainers.md)). Chạy giao diện cần thêm Node.js 24.
 
 Chuẩn bị một lần:
 
@@ -315,6 +316,16 @@ Chạy test (tự bật PostgreSQL trong Docker bằng Testcontainers, không đ
 ```bash
 ./mvnw test
 ```
+
+Chạy giao diện, khi backend đang chạy ở cổng 8080; mở http://localhost:5173:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Kiểm tra giao diện: `npm run typecheck`, `npm run test`, `npm run build`.
 
 ---
 
@@ -356,6 +367,7 @@ Frontend tự chuyển thời gian sang giờ địa phương khi hiển thị. 
 | Module | Tiền tố | Ai được gọi |
 |---|---|---|
 | `identity` | `/api/auth/**` | Công khai (đăng nhập, đăng ký) |
+| `identity` | `/api/users/**` | Mọi người đã đăng nhập (`GET /api/users/me`: người đang đăng nhập) |
 | `examdesign` | `/api/design/**` | TEACHER |
 | `examination` | `/api/exam/**` | STUDENT và TEACHER (kiểm tra chi tiết trong từng endpoint) |
 | `proctoring` | `/api/proctor/**` | STUDENT gửi sự kiện; TEACHER xem màn hình giám sát, cộng giờ, khóa bài |

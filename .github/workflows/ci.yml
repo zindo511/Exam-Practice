@@ -1,7 +1,7 @@
 name: CI
 
-# Chạy toàn bộ test (kiến trúc, khởi động, unit, integration) cho mọi pull request vào main
-# và mỗi lần main thay đổi. Test cần Docker cho Testcontainers; runner ubuntu của GitHub có sẵn Docker.
+# Chạy toàn bộ test backend (kiến trúc, khởi động, unit, integration) và kiểm tra giao diện cho mọi
+# pull request vào main và mỗi lần main thay đổi. Test cần Docker cho Testcontainers; runner ubuntu của GitHub có sẵn Docker.
 on:
   pull_request:
     branches: [main]
@@ -48,3 +48,31 @@ jobs:
           name: surefire-reports
           path: target/surefire-reports/
           retention-days: 7
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cài Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cài thư viện
+        run: npm ci
+
+      - name: Chạy test
+        run: npm run test
+
+      - name: Kiểm tra kiểu và build
+        run: npm run build

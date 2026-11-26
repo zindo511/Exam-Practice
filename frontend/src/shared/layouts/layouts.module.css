@@ -1,0 +1,62 @@
+.page {
+    min-height: 100vh;
+}
+
+.page .header {
+    height: auto;
+    min-height: 72px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    line-height: 1.5;
+    border-bottom: 1px solid #dde0ea;
+}
+
+.brand {
+    font-size: 18px;
+    font-weight: 700;
+    color: #43359a;
+}
+
+.userName {
+    font-weight: 500;
+}
+
+.studentContent {
+    width: 100%;
+    max-width: 1080px;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 32px 24px 56px;
+}
+
+.page .sider {
+    border-right: 1px solid #dde0ea;
+}
+
+/* Viền phải đã có ở .sider. */
+.sider .menu {
+    border-inline-end: 0;
+}
+
+.siderBrand {
+    composes: brand;
+    padding: 24px 24px 20px;
+}
+
+.siderUser {
+    padding: 24px;
+}
+
+.teacherContent {
+    min-width: 0;
+    padding: 32px 40px 56px;
+}
+
+@media (max-width: 768px) {
+    .teacherContent {
+        padding: 72px 16px 40px;
+    }
+}

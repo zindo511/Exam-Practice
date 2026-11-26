@@ -1,0 +1,13 @@
+# Quy ước định dạng cho IDE (IntelliJ, VS Code đọc file này).
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# YAML (GitHub Actions) quen dùng 2 space.
+[*.{yml,yaml}]
+indent_size = 2

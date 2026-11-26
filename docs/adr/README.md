@@ -36,3 +36,4 @@ README của dự án mô tả hệ thống **là gì** và **dùng thế nào**
 | [0017](0017-thu-lai-khi-xung-dot-optimistic-locking.md) | Thử lại khi xung đột optimistic locking trên bài làm | Đã chấp nhận |
 | [0018](0018-cong-gio-vuot-gio-dong-ky-thi.md) | Cộng giờ được vượt giờ đóng kỳ thi, kỳ thi chờ bài cuối cùng hết giờ | Đã chấp nhận |
 | [0019](0019-mvp-khong-co-heartbeat.md) | MVP không có heartbeat, không phát hiện mất kết nối | Đã chấp nhận |
+| [0020](0020-giao-dien-react-chia-theo-cum.md) | Giao diện React trong cùng repo, code chia theo cụm chức năng | Đã chấp nhận |

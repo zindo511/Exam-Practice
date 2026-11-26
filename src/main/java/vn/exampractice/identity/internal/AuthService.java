@@ -7,9 +7,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.exampractice.shared.error.BusinessException;
+import vn.exampractice.shared.error.CommonErrorCode;
 
 /**
- * Đăng ký và đăng nhập.
+ * Đăng ký, đăng nhập và người đang đăng nhập.
  */
 @Service
 class AuthService {
@@ -53,5 +54,13 @@ class AuthService {
                 .filter(found -> passwordEncoder.matches(request.password(), found.getPasswordHash()))
                 .orElseThrow(() -> new BusinessException(IdentityErrorCode.INVALID_CREDENTIALS));
         return TokenResponse.bearer(jwtService.issue(user.getId(), user.getRole()), jwtService.expirationSeconds());
+    }
+
+    /** Người đang đăng nhập. Token còn hạn mà tài khoản không còn thì coi như chưa đăng nhập. */
+    @Transactional(readOnly = true)
+    UserResponse currentUser(Long userId) {
+        UserAccount user = repository.findById(userId)
+                .orElseThrow(() -> new BusinessException(CommonErrorCode.UNAUTHENTICATED));
+        return UserResponse.from(user);
     }
 }
