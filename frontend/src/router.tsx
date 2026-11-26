@@ -1,5 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import { LoginPage } from './features/auth/LoginPage';
+import { MySessionsPage } from './features/my-sessions/MySessionsPage';
+import { WaitingRoomPage } from './features/my-sessions/WaitingRoomPage';
 import { RegisterPage } from './features/auth/RegisterPage';
 import { RequireRole } from './features/auth/RequireRole';
 import { ExamEditorPage } from './features/exams/ExamEditorPage';
@@ -37,7 +39,11 @@ export const router = createBrowserRouter([
         children: [
             {
                 element: <StudentLayout />,
-                children: [{ index: true, element: <NotReadyPage title="Kỳ thi của tôi" /> }],
+                children: [
+                    { index: true, element: <MySessionsPage /> },
+                    { path: 'sessions/:sessionId', element: <WaitingRoomPage /> },
+                    { path: 'attempts/:attemptId', element: <NotReadyPage title="Làm bài" /> },
+                ],
             },
         ],
     },
